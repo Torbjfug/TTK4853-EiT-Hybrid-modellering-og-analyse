@@ -21,10 +21,12 @@ import matplotlib
 import cftime
 def check (url):
     try:
+        print(url)
         u = request.urlopen(url)
         u.close()
         return True
-    except:
+    except Exception as e:
+        print(e)
         return False
             
 def download_Bessaker_data(start_date, end_date,destination_folder):
@@ -133,57 +135,59 @@ def extract_XY_plane(data_code,start_date,end_date,iz):
                 td     = np.ma.append(td,nc_fid['turbulence_dissipation_ml'][:][:][1:13,iz,:,:],axis=0)
                 nc_fid.close()
     return time, latitude, longitude, terrain, x,y,z,u,v,w,theta,tke,td 
+
+if __name__ == "__main__":
+        
+    data_code = 'simra_BESSAKER_'
+    start_date = date(2018, 4, 1)  #1,2
+    end_date   = date(2018, 4, 2) # 
+    download_Bessaker_data(start_date,end_date,'./')
+    #combine_files(data_code,start_date,end_date,outfilename='temp.pkl')
+    ix=75
+    iy=75
+    iz=20 #the higher the value the closest the layer is to the ground
+    time, latitude, longitude, terrain, x,y,z,u,v,w,theta,tke,td = extract_XY_plane(data_code,start_date,end_date,iz)
+
+    plt.plot(u[:,20,10])
+    plt.show()
+
+    X, Y = np.meshgrid(x, y)
+    plt.contour(z)
+    plt.contourf(u[1,:,:],cmap='hsv')
+    plt.quiver(u[10,:,:],v[10,:,:],scale=200)
+    plt.show()
+    print(np.max(u),np.max(v),np.max(w),np.max(theta))
+
+
+    '''
+    delta_x = (X[135, 134] - X[0, 0])*10**5
+    delta_y = (Y[135, 134] - Y[0, 0])*10**5
+    X_res = delta_x/136
+    Y_res = delta_y/135
+    '''
+    # saving u, v, w 
+    # with open('2018_apr.pickle', 'wb') as f:
+    #     pickle.dump([u, v, w], f)
     
-data_code = 'simra_BESSAKER_'
-start_date = date(2018, 4, 1)  #1,2
-end_date   = date(2018, 4, 30) # 
-#download_Bessaker_data(start_date,end_date,'./')
-#combine_files(data_code,start_date,end_date,outfilename='temp.pkl')
-ix=75
-iy=75
-iz=20 #the higher the value the closest the layer is to the ground
-time, latitude, longitude, terrain, x,y,z,u,v,w,theta,tke,td = extract_XY_plane(data_code,start_date,end_date,iz)
-
-plt.plot(u[:,20,10])
-plt.show()
-
-X, Y = np.meshgrid(x, y)
-plt.contour(z)
-plt.contourf(u[1,:,:],cmap='hsv')
-plt.quiver(u[10,:,:],v[10,:,:],scale=200)
-plt.show()
-print(np.max(u),np.max(v),np.max(w),np.max(theta))
 
 
-'''
-delta_x = (X[135, 134] - X[0, 0])*10**5
-delta_y = (Y[135, 134] - Y[0, 0])*10**5
-X_res = delta_x/136
-Y_res = delta_y/135
-'''
-# saving u, v, w 
-with open('2018_apr.pickle', 'wb') as f:
-    pickle.dump([u, v, w], f)
- 
+    '''
+    with open('2018_january.pickle', 'rb') as f:
+    u_jan, v_jan, w_jan = pickle.load(f)
+    with open('2018_february.pickle', 'rb') as f:
+    u_feb, v_feb, w_feb = pickle.load(f)
+    with open('2018_march.pickle', 'rb') as f:
+    u_mar, v_mar, w_mar = pickle.load(f)
+    with open('2018_apr.pickle', 'rb') as f:
+    u_apr, v_apr, w_apr = pickle.load(f)
 
-
-'''
-with open('2018_january.pickle', 'rb') as f:
-   u_jan, v_jan, w_jan = pickle.load(f)
-with open('2018_february.pickle', 'rb') as f:
-   u_feb, v_feb, w_feb = pickle.load(f)
-with open('2018_march.pickle', 'rb') as f:
-   u_mar, v_mar, w_mar = pickle.load(f)
-with open('2018_apr.pickle', 'rb') as f:
-   u_apr, v_apr, w_apr = pickle.load(f)
-
-u = np.concatenate((u_jan,u_feb,u_mar, u_apr), axis = 0)
-v = np.concatenate((v_jan,v_feb,v_mar, v_apr), axis = 0)
-w = np.concatenate((w_jan,w_feb,w_mar, w_apr), axis = 0)
-with open('download_data.pickle', 'wb') as f:
-    pickle.dump([u, v, w], f)
-'''
+    u = np.concatenate((u_jan,u_feb,u_mar, u_apr), axis = 0)
+    v = np.concatenate((v_jan,v_feb,v_mar, v_apr), axis = 0)
+    w = np.concatenate((w_jan,w_feb,w_mar, w_apr), axis = 0)
+    with open('download_data.pickle', 'wb') as f:
+        pickle.dump([u, v, w], f)
+    '''
 
 
 
- 
+    
