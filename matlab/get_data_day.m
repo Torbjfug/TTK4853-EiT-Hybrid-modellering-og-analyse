@@ -1,6 +1,6 @@
 function data_vector = get_data_day(year, month, day)
     %x_begin = 1; x_end = 133; y_begin = 1; y_end = 133; l_begin = 1;l_end = 39;
-    x_begin = 1; x_end = 133; y_begin = 1; y_end = 133; l_begin = 1;l_end =39;
+    x_begin = 2; x_end = 132; y_begin = 2; y_end = 132; l_begin = 2;l_end =38;
 
     size_vector = (x_end+1-x_begin)*(y_end+1-y_begin)*(l_end+1-l_begin);
     air_potential_temperature_ml = get_data(year, month, day, 'air_potential_temperature_ml', x_begin, x_end, y_begin, y_end, l_begin, l_end, 0, 12);
@@ -13,7 +13,7 @@ function data_vector = get_data_day(year, month, day)
 
 
     
-    filename = sprintf("data/%d_%02d_%02d",year,month,day);
+    filename = sprintf("data/calibration/%d_%02d_%02d",year,month,day);
     save(filename,'air_potential_temperature_ml','x_wind_ml','y_wind_ml','y_wind_ml','upward_air_velocity_ml','air_pressure_ml','turbulence_index_ml','turbulence_dissipation_ml','-v7.3')
     data_vector = [reshape(air_potential_temperature_ml,size_vector,13); 
                    reshape(x_wind_ml,size_vector,13);

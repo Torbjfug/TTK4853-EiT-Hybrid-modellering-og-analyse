@@ -132,4 +132,10 @@ dmypy.json
 #Matlab temp files
 *.m~
 
+#Vscode settings
+**.vscode/
+
+
+all_files.hdf5
+
 data/*
