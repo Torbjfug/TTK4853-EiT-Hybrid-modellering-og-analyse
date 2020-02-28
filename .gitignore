@@ -139,3 +139,5 @@ dmypy.json
 all_files.hdf5
 
 data/*
+
+**/checkpoints/

@@ -13,6 +13,8 @@ from utils import compute_loss
 from trainer import create_plots
 import trainer
 
+import plotting
+
 
 def compute_dims(dims, out_dims, P, F, S):
     a = (dims - F[0] + 2 * P[0]) / S[0] + 1
@@ -56,7 +58,6 @@ class FullyConnectedModel(nn.Module):
         assert out.shape == x.shape
         return out
 
-
 class Model(nn.Module):
 
     def __init__(self,
@@ -69,11 +70,13 @@ class Model(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        # Encoder
-        self.num_filters = [64]
-        self.paddings = [1]
-        self.strides = [2]
-        self.kernels = [3]
+        #Encoder
+        stride_dim = (2, 2, 2)
+        kernel_dim = (4, 4, 2)
+        self.num_filters = [16, 32, 64]
+        self.paddings = [0,0,0]
+        self.strides = [stride_dim,stride_dim,stride_dim]
+        self.kernels = [kernel_dim,kernel_dim,kernel_dim]
         self.encoded = None
 
         self.encoder = nn.Sequential(
@@ -81,59 +84,66 @@ class Model(nn.Module):
                 in_channels=image_channels,
                 out_channels=self.num_filters[0],
                 kernel_size=self.kernels[0],
-                stride=[2, 2, 2],  # self.strides[0],
-                padding=self.paddings[0]
+                stride=self.strides[0],
+                padding=0
             ),
             nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[0]),
+            nn.Conv3d(
+                in_channels=self.num_filters[0],
+                out_channels=self.num_filters[1],
+                kernel_size=self.kernels[1],
+                stride=self.strides[1],
+                padding=0
+            ),
+            nn.ReLU()
         )
-        # spatial_dims = compute_dims(
-        #     np.array(input_dimentions), [], self.paddings, self.kernels, self.strides)
-        # self.num_output_features = int(
-        #     np.prod(spatial_dims[-1]) * self.num_filters[-1])
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[0],
+                kernel_size=self.kernels[1],
+                stride = self.strides[1],
+                output_padding=(0,0,1)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[0]),
+            nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
                 out_channels=image_channels,
-                kernel_size=3,
-                stride=[1, 1, 1],
-                padding=self.paddings[0]
-            )
-        )
+                kernel_size=self.kernels[0],
+                stride=self.strides[0],
+            ),
+        )   
 
     def forward(self, x):
-        """
-        Performs a forward pass through the model
-        Args:
-            x: Input image, shape: [batch_size, 3, 32, 32]
-        """
-
         self.encoded = self.encoder(x)
         out = self.decoder(self.encoded)
 
-        print("X: ", x.shape)
-        print("Encode: ", self.encoded.shape)
-        print("out", out.shape)
-        assert out.shape == x.shape
+        # print("X: ", x.shape)
+        # print("Encode: ", self.encoded.shape)
+        # print("out", out.shape)
+        # assert out.shape == x.shape
         return out
 
 
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range=[10, 20], y_range=[10, 20], z_range=[
-        20, 30], folder='data/normalized/')
+    dataset = weatherDataSet(x_range=[0, 50], y_range=[0, 50], z_range=[
+        0, 30], folder='data/calibration/')
     dataloader = DataLoader(dataset, batch_size=32,
                             shuffle=True, num_workers=4)
-    dataset = weatherDataSet(x_range=[20, 30], y_range=[20, 30], z_range=[
-        20, 30], folder='data/normalized/')
-    validation_dataloader = DataLoader(dataset, batch_size=256,
+    val_dataset = weatherDataSet(x_range=[0, 50], y_range=[0, 50], z_range=[
+        0, 30], folder='data/validation/')
+    validation_dataloader = DataLoader(val_dataset, batch_size=64,
                                        shuffle=True, num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = FullyConnectedModel(7, [10, 10, 10])
+    model = Model(3, [50, 50, 30])
 
-    epochs = 20
+    epochs = 10
     batch_size = 32
     learning_rate = 1e-3
-    early_stop_count = 100000000
+    early_stop_count = 5
 
     trainer = trainer.Trainer(
         batch_size,
@@ -145,6 +155,26 @@ if __name__ == "__main__":
     )
 
     print(torch.cuda.is_available())
+    train = False
+    if train:
+        trainer.train()
+        create_plots(trainer, "test")
+    else:
+        trainer.load_best_model()
+        data_sample = next(iter(validation_dataloader))
+        #reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
+        reconstructed = model(data_sample)
+        print(data_sample.shape)
 
-    trainer.train()
-    create_plots(trainer, "test")
+        data = data_sample.detach().numpy()
+        reconstructed = reconstructed.detach().numpy()
+        #plotting.plot_histogram(data_sample[:,0,:,:,:], reconstructed[:,0,:,:,:] ,title='x',bins=20)
+
+        #plotting.plot_histogram(data_sample[:,1,:,:,:], reconstructed[:,1,:,:,:] ,title='y',bins=20)
+
+        #plotting.plot_histogram(data_sample[:, 2,:,:,:], reconstructed[:, 2,:,:,:], title='up', bins=20)
+        plotting.plot_contour(data, reconstructed ,title='x')
+
+        
+        plt.show(block=False)
+        input("Press key to exit")

@@ -24,14 +24,15 @@ class weatherDataSet(Dataset):
 
             keys = list(f.keys())
 
-            shape = (x_range[1]-x_range[0], y_range[1] -
-                     y_range[0], z_range[1]-z_range[0])
+            shape = (z_range[1]-z_range[0], y_range[1] -
+                     y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
             for i, key in enumerate(keys):
-                # val = f[key][time, z_range[0]:z_range[1], y_range[0]:y_range[1],
-                #              x_range[0]:x_range[1]]
-                val = f[key][x_range[0]:x_range[1], y_range[0]:y_range[1],
-                             z_range[0]:z_range[1], time]
+                val = f[key][time, z_range[0]:z_range[1], y_range[0]:y_range[1],
+                             x_range[0]:x_range[1]]
+                # val = f[key][x_range[0]:x_range[1], y_range[0]:y_range[1],
+                #              z_range[0]:z_range[1], time]
+                val = (val - self.means[key]) / self.stds[key]
                 tensor_data[i, :, :, :] = torch.from_numpy(val)
 
         return tensor_data
@@ -43,12 +44,12 @@ class weatherDataSet(Dataset):
         hour = idx % 13
         data = self.load_file_tensor(
             self.folder + self.filenames[idx // 13], self.x_range, self.y_range, self.z_range, time=hour)
-        return data.flatten()
+        return data
 
 
 if __name__ == "__main__":
     dataset = weatherDataSet(x_range=[10, 40], y_range=[10, 40], z_range=[
-        20, 30], folder='data/normalized/')
+        20, 30], folder='data/calibration/')
 
     dataloader = DataLoader(dataset, batch_size=32,
                             shuffle=True, num_workers=0)

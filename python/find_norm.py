@@ -5,6 +5,7 @@ import pickle
 import h5py
 from tqdm import tqdm
 from fileHandling import *
+import pandas as pd
 
 
 def calculate_means(data):
@@ -57,20 +58,22 @@ def normalize_datasets(original_folder, dest_folder, means, stds):
 
 
 if __name__ == "__main__":
-    # load_data = False
-    # if load_data:
-    #     #data = load_hdf5('all_files.hdf5')
-    #     means, stds = load_hdf5('means.hdf5'), load_hdf5('stds.hdf5')
+    load_data = False
+    if load_data:
+        #data = load_hdf5('all_files.hdf5')
+        means, stds = load_hdf5('means.hdf5'), load_hdf5('stds.hdf5')
 
-    # else:
-    #     input("Press enter to overwrite file")
-    #     filename = 'all_files.hdf5'
-    #     if filename in os.listdir('./'):
-    #         os.remove(filename)
-    #     data = concatenate_files_in_folder('data/calibration/', filename)
-    #     means, stds = calculate_means(data), calculate_std(data)
-    #     save_hdf5(means, 'means.hdf5')
-    #     save_hdf5(stds, 'stds.hdf5')
+    else:
+        input("Press enter to overwrite file")
+        filename = 'all_files.hdf5'
+        if filename in os.listdir('./'):
+            os.remove(filename)
+        data = concatenate_files_in_folder('data/calibration/', filename)
+        means, stds = calculate_means(data), calculate_std(data)
+        save_hdf5(means, 'means.hdf5')
+        save_hdf5(stds, 'stds.hdf5')
+        print(means)
+        print(stds)
 
     # test_file = 'data/calibration/2017_11_05.mat'
     # test_data = load_hdf5(test_file)
@@ -79,5 +82,9 @@ if __name__ == "__main__":
     # test_std = calculate_std(test_data_norm)
     # print(test_mean)
     # print(test_std)
-    means, stds = load_hdf5('means.hdf5'), load_hdf5('stds.hdf5')
-    normalize_datasets('data/calibration/', 'data/normalized/', means, stds)
+    #means, stds = load_hdf5('means.hdf5'), load_hdf5('stds.hdf5')
+    #data = load_hdf5("data/calibration/2017_12_05.mat")
+
+        
+    
+    #normalize_datasets('data/calibration/', 'data/normalized/', means, stds)

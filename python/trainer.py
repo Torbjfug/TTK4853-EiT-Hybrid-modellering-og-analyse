@@ -77,10 +77,10 @@ class Trainer:
             f"Validation Loss: {validation_loss:.4f},",
             sep="\t")
         # Compute for testing set
-        test_loss = compute_loss(
-            self.dataloader_test, self.model, self.loss_criterion
-        )
-        self.TEST_LOSS[self.global_step] = test_loss
+        #test_loss = compute_loss(
+        #    self.dataloader_test, self.model, self.loss_criterion
+        #)
+        #self.TEST_LOSS[self.global_step] = test_loss
 
         self.model.train()
 
@@ -112,13 +112,9 @@ class Trainer:
             self.epoch = epoch
             # Perform a full pass through all the training samples
             for X_batch in self.dataloader_train:
-                # X_batch is the CIFAR10 images. Shape: [batch_size, 3, 32, 32]
-                # Y_batch is the CIFAR10 image label. Shape: [batch_size]
-                # Transfer images / labels to GPU VRAM, if possible
-                #X_batch = utils.to_cuda(X_batch)
-                #Y_batch = utils.to_cuda(Y_batch)
 
                 # Perform the forward pass
+                X_batch = utils.to_cuda(X_batch)
                 predictions = self.model(X_batch)
                 # Compute the cross entropy loss for the batch
                 loss = self.loss_criterion(predictions, X_batch)
@@ -169,6 +165,5 @@ def create_plots(trainer: Trainer, name: str):
     plt.title("MSE Loss")
     utils.plot_loss(trainer.TRAIN_LOSS, label="Training loss")
     utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
-    utils.plot_loss(trainer.TEST_LOSS, label="Testing Loss")
     plt.legend()
     plt.show()

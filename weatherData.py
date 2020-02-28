@@ -30,7 +30,7 @@ class weatherDataSet(Dataset):
                         if f.endswith('.mat') and os.path.isfile(os.path.join(folder, f))]
     
     def __len__(self):
-        return len(self.filenames)*13
+        return len(self.filenames)*3
     
     def __getitem__(self, idx):
         hour = idx%13
@@ -41,7 +41,7 @@ class weatherDataSet(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range = [10,40], y_range = [10,40], z_range = [20,30], folder = 'data/calibration/')
+    dataset = weatherDataSet(x_range = [0,10], y_range = [0,10], z_range = [0,10], folder = 'data/calibration/')
     
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=4)
     for i, batch in enumerate(dataloader):

@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 from weatherData import weatherDataSet
 from torch.utils.data import DataLoader
+import trainer
 
 
 def compute_dims(dims, out_dims, P, F, S):
@@ -29,12 +30,13 @@ class Model(nn.Module):
         """
         super().__init__()
         #Encoder
-        self.num_filters = [32]
-        self.paddings = [0]
-        self.strides = [2]
-        self.kernels = [2]
+        stride_dim = (2, 2, 2)
+        kernel_dim = (2, 2, 2)
+        self.num_filters = [16, 32, 64]
+        self.paddings = [0,0,0]
+        self.strides = [stride_dim,stride_dim,stride_dim]
+        self.kernels = [kernel_dim,kernel_dim,kernel_dim]
         self.encoded = None
-
 
         self.encoder = nn.Sequential(
             nn.Conv3d(
@@ -42,23 +44,35 @@ class Model(nn.Module):
                 out_channels=self.num_filters[0],
                 kernel_size=self.kernels[0],
                 stride=self.strides[0],
-                padding=self.kernels[0]
+                padding=0
             ),
             nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[0],
+                out_channels=self.num_filters[1],
+                kernel_size=self.kernels[1],
+                stride=self.strides[1],
+                padding=0
+            ),
+            nn.ReLU()
         )
-        spatial_dims = compute_dims(np.array(input_dimentions), [], self.paddings, self.kernels, self.strides)
-        self.num_output_features = int(np.prod(spatial_dims[-1]) * self.num_filters[-1])
-        
-        
 
         self.decoder = nn.Sequential(
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[0],
+                kernel_size=self.kernels[1],
+                stride = self.strides[1],
+                output_padding=1
+            ),
+            nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
                 out_channels=image_channels,
                 kernel_size=self.kernels[0],
                 stride=self.strides[0],
-                padding=self.paddings[0]
-            )
+            ),
+
         )
 
     def forward(self, x):
@@ -71,23 +85,21 @@ class Model(nn.Module):
         self.encoded = self.encoder(x)
         out = self.decoder(self.encoded)
         
-        print(x.shape)
-        print(self.encoded.shape)
-        print(out.shape)
+        print("X",x.shape)
+        print("enx",self.encoded.shape)
+        print("out",out.shape)
         assert out.shape == x.shape
         return out  
 
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range = [10,20], y_range = [10,20], z_range = [20,30], folder = 'data/calibration/')
+    dataset = weatherDataSet(x_range = [0,30], y_range = [0,30], z_range = [0,30], folder = 'data/calibration/')
     
     dataloader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=4)
-    model = Model(7, [10, 10, 10])
+    model = Model(3, [30, 30, 30])
+    print(model)
+    trainer 
+
     for i, batch in enumerate(dataloader):
-         print(i, batch.shape)
          output = model.forward(batch)
-
-    
-
-    
     print(output.shape)
     
