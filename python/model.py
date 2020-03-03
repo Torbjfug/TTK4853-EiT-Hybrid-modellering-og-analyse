@@ -58,6 +58,7 @@ class FullyConnectedModel(nn.Module):
         assert out.shape == x.shape
         return out
 
+
 class Model(nn.Module):
 
     def __init__(self,
@@ -70,16 +71,16 @@ class Model(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        #Encoder
+        # Encoder
         stride_dim = (2, 2, 2)
         kernel_dim = (4, 4, 2)
-        self.num_filters = [16, 32, 64]
-        self.paddings = [0,0,0]
-        self.strides = [stride_dim,stride_dim,stride_dim]
-        self.kernels = [kernel_dim,kernel_dim,kernel_dim]
+        self.num_filters = [64, 64, 64]
+        self.paddings = [0, 0, 0]
+        self.strides = [stride_dim, stride_dim, stride_dim]
+        self.kernels = [kernel_dim, kernel_dim, kernel_dim]
         self.encoded = None
 
-        self.encoder = nn.Sequential(
+        self.encoder_conv = nn.Sequential(
             nn.Conv3d(
                 in_channels=image_channels,
                 out_channels=self.num_filters[0],
@@ -98,14 +99,42 @@ class Model(nn.Module):
             ),
             nn.ReLU()
         )
+        in_shape = (1, image_channels)+tuple(input_dimentions)
+
+        dummy_data = torch.rand(in_shape)
+        dummy_compressed = self.encoder_conv(dummy_data)
+        self.cov_end_shape = dummy_compressed.shape[1:]
+        self.fc_input = np.prod(list(dummy_compressed.shape[1:]))
+        print(dummy_compressed.shape)
+        print(self.fc_input)
+
+        fc_dims = [
+            self.fc_input, 10, 10]
+
+        self.encoder_dense = nn.Sequential(
+            nn.Linear(fc_dims[0], fc_dims[1]),
+            nn.ReLU(),
+            nn.BatchNorm1d(fc_dims[1]),
+            nn.Dropout(0.1),
+            nn.Linear(fc_dims[1], fc_dims[2]),
+            nn.ReLU(),
+        )
+        self.decoder_dense = nn.Sequential(
+            nn.Linear(fc_dims[2], fc_dims[1]),
+            nn.ReLU(),
+            nn.BatchNorm1d(fc_dims[1]),
+            nn.Dropout(0.1),
+            nn.Linear(fc_dims[1], fc_dims[0]),
+            nn.ReLU()
+        )
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[1],
                 out_channels=self.num_filters[0],
                 kernel_size=self.kernels[1],
-                stride = self.strides[1],
-                output_padding=(0,0,1)
+                stride=self.strides[1],
+                output_padding=(0, 1, 0)
             ),
             nn.ReLU(),
             nn.BatchNorm3d(self.num_filters[0]),
@@ -115,32 +144,40 @@ class Model(nn.Module):
                 kernel_size=self.kernels[0],
                 stride=self.strides[0],
             ),
-        )   
+        )
 
     def forward(self, x):
-        self.encoded = self.encoder(x)
-        out = self.decoder(self.encoded)
-
+        print("X: ", x.shape)
+        x_ec = self.encoder_conv(x)
+        print("Xec: ", x_ec.shape)
+        self.encoded = self.encoder_dense(x_ec.view((-1, self.fc_input)))
+        print("Encode: ", self.encoded.shape)
+        x_dc = self.decoder_dense(self.encoded.view(-1, self.cov_end_shape))
+        print("Xdc: ", x_dc.shape)
+        out = self.decoder_conv(x_dc)
         # print("X: ", x.shape)
+        # print("Xec: ", x_ec.shape)
         # print("Encode: ", self.encoded.shape)
-        # print("out", out.shape)
-        # assert out.shape == x.shape
+        # print("Xdc: ", x_dc.shape)
+        print("out", out.shape)
+        assert out.shape == x.shape
         return out
 
 
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range=[0, 50], y_range=[0, 50], z_range=[
-        0, 30], folder='data/calibration/')
+    xy_max = 125
+    dataset = weatherDataSet(x_range=[0, xy_max], y_range=[0, xy_max], z_range=[
+        0, 30], folder='data/train/')
     dataloader = DataLoader(dataset, batch_size=32,
-                            shuffle=True, num_workers=4)
-    val_dataset = weatherDataSet(x_range=[0, 50], y_range=[0, 50], z_range=[
+                            shuffle=True, num_workers=0)
+    val_dataset = weatherDataSet(x_range=[0, xy_max], y_range=[0, xy_max], z_range=[
         0, 30], folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset, batch_size=64,
-                                       shuffle=True, num_workers=4)
+                                       shuffle=True, num_workers=16)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = Model(3, [50, 50, 30])
+    model = Model(3, [xy_max, xy_max, 30])
 
-    epochs = 10
+    epochs = 2
     batch_size = 32
     learning_rate = 1e-3
     early_stop_count = 5
@@ -155,26 +192,23 @@ if __name__ == "__main__":
     )
 
     print(torch.cuda.is_available())
-    train = False
+    train = True
     if train:
         trainer.train()
         create_plots(trainer, "test")
     else:
         trainer.load_best_model()
         data_sample = next(iter(validation_dataloader))
-        #reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
+        # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
         reconstructed = model(data_sample)
         print(data_sample.shape)
 
         data = data_sample.detach().numpy()
         reconstructed = reconstructed.detach().numpy()
-        #plotting.plot_histogram(data_sample[:,0,:,:,:], reconstructed[:,0,:,:,:] ,title='x',bins=20)
+        # plotting.plot_histogram(data_sample[:,0,:,:,:], reconstructed[:,0,:,:,:] ,title='x',bins=20)
+        # plotting.plot_histogram(data_sample[:,1,:,:,:], reconstructed[:,1,:,:,:] ,title='y',bins=20)
+        # plotting.plot_histogram(data_sample[:, 2,:,:,:], reconstructed[:, 2,:,:,:], title='up', bins=20)
+        plotting.plot_contour(data, reconstructed, title='x')
 
-        #plotting.plot_histogram(data_sample[:,1,:,:,:], reconstructed[:,1,:,:,:] ,title='y',bins=20)
-
-        #plotting.plot_histogram(data_sample[:, 2,:,:,:], reconstructed[:, 2,:,:,:], title='up', bins=20)
-        plotting.plot_contour(data, reconstructed ,title='x')
-
-        
         plt.show(block=False)
         input("Press key to exit")

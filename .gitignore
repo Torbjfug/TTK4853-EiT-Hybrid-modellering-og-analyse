@@ -141,3 +141,5 @@ all_files.hdf5
 data/*
 
 **/checkpoints/
+
+*.DS_Store

@@ -4,6 +4,7 @@ import numpy as np
 import hdf5storage
 from tqdm import tqdm
 
+
 def save_hdf5(data, filename):
     with h5py.File(filename, 'w') as data_file:
         for key in data.keys():
@@ -22,9 +23,6 @@ def concatinate_files(data1, data2):
     for key in data2.keys():
         data1[key] = np.concatenate((data1[key], data2[key]))
     return data1
-
-
-
 
 
 def concatenate_hdf5(filename, data):
@@ -48,3 +46,21 @@ def concatenate_files_in_folder(source_dir, save_file):
             concatenate_hdf5(save_file, data)
     all_data = load_hdf5(save_file)
     return all_data
+
+
+def delete_bad_data(folder):
+    for filename in tqdm(os.listdir(folder)):
+        if filename.endswith('.mat'):
+            data = load_hdf5(folder + filename)
+            for key in data.keys():
+                if np.isnan(np.mean(data[key])):
+                    print(key, filename)
+                    os.remove(folder+filename)
+                    break
+
+
+if __name__ == "__main__":
+    # delete_bad_data('data/validation/')
+    data = load_hdf5('data/train/2018_01_01.mat')
+    print(data.keys())
+    print(data['x_wind_ml'].shape)
