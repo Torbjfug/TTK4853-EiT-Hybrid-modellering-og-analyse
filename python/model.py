@@ -73,8 +73,8 @@ class Model(nn.Module):
         super().__init__()
         # Encoder
         stride_dim = (2, 2, 2)
-        kernel_dim = (4, 4, 2)
-        self.num_filters = [64, 64, 64]
+        kernel_dim = (3, 3, 3)
+        self.num_filters = [64, 128, 256]
         self.paddings = [0, 0, 0]
         self.strides = [stride_dim, stride_dim, stride_dim]
         self.kernels = [kernel_dim, kernel_dim, kernel_dim]
@@ -85,65 +85,112 @@ class Model(nn.Module):
                 in_channels=image_channels,
                 out_channels=self.num_filters[0],
                 kernel_size=self.kernels[0],
-                stride=self.strides[0],
-                padding=0
+                stride=1,
+                padding=(1, 1, 1)
             ),
             nn.ReLU(),
             nn.BatchNorm3d(self.num_filters[0]),
             nn.Conv3d(
                 in_channels=self.num_filters[0],
+                out_channels=self.num_filters[0],
+                kernel_size=self.kernels[0],
+                stride=1,
+                padding=(1, 1, 1)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[0]),
+            nn.MaxPool3d((2, 2, 2)),
+
+            nn.Conv3d(
+                in_channels=self.num_filters[0],
+                out_channels=self.num_filters[1],
+                kernel_size=self.kernels[1],
+                stride=1,
+                padding=(1, 1, 1)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[1]),
+            nn.Conv3d(
+                in_channels=self.num_filters[1],
                 out_channels=self.num_filters[1],
                 kernel_size=self.kernels[1],
                 stride=self.strides[1],
-                padding=0
+                padding=(1, 1, 1)
             ),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[1]),
+            nn.MaxPool3d((2, 2, 2)),
+
+            nn.Conv3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[2],
+                kernel_size=(3, 3, 3),
+                stride=1,
+                padding=(1, 1, 1)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[2]),
+            nn.Conv3d(
+                in_channels=self.num_filters[2],
+                out_channels=self.num_filters[2],
+                kernel_size=(3, 3, 3),
+                stride=1,
+                padding=(1, 1, 1)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[2]),
         )
         in_shape = (1, image_channels)+tuple(input_dimentions)
-
+        print(in_shape)
         dummy_data = torch.rand(in_shape)
+        print(dummy_data.shape)
         dummy_compressed = self.encoder_conv(dummy_data)
         self.cov_end_shape = dummy_compressed.shape[1:]
         self.fc_input = np.prod(list(dummy_compressed.shape[1:]))
         print(dummy_compressed.shape)
         print(self.fc_input)
 
-        fc_dims = [
-            self.fc_input, 10, 10]
+        fc_dims = [self.fc_input, 10]
 
         self.encoder_dense = nn.Sequential(
             nn.Linear(fc_dims[0], fc_dims[1]),
-            nn.ReLU(),
             nn.BatchNorm1d(fc_dims[1]),
             nn.Dropout(0.1),
-            nn.Linear(fc_dims[1], fc_dims[2]),
             nn.ReLU(),
         )
         self.decoder_dense = nn.Sequential(
-            nn.Linear(fc_dims[2], fc_dims[1]),
-            nn.ReLU(),
-            nn.BatchNorm1d(fc_dims[1]),
-            nn.Dropout(0.1),
             nn.Linear(fc_dims[1], fc_dims[0]),
-            nn.ReLU()
+            nn.BatchNorm1d(fc_dims[0]),
+            nn.Dropout(0.1),
+            nn.ReLU(),
         )
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=self.num_filters[1],
-                out_channels=self.num_filters[0],
-                kernel_size=self.kernels[1],
-                stride=self.strides[1],
-                output_padding=(0, 1, 0)
+                in_channels=self.num_filters[2],
+                out_channels=self.num_filters[1],
+                kernel_size=(4, 4, 4),
+                stride=(2, 2, 2),
+                output_padding=(0, 0, 0)
             ),
             nn.ReLU(),
-            nn.BatchNorm3d(self.num_filters[0]),
+            nn.BatchNorm3d(self.num_filters[2]),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[0],
+                kernel_size=(4, 4, 4),
+                stride=(2, 2, 2),
+                output_padding=(0, 0, 0)
+            ),
+            nn.ReLU(),
+            nn.BatchNorm3d(self.num_filters[1]),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
                 out_channels=image_channels,
-                kernel_size=self.kernels[0],
-                stride=self.strides[0],
-            ),
+                kernel_size=(4, 4, 4),
+                stride=(2, 2, 2),
+                output_padding=(0, 0, 0)
+            )
         )
 
     def forward(self, x):
@@ -168,14 +215,14 @@ if __name__ == "__main__":
     xy_max = 125
     dataset = weatherDataSet(x_range=[0, xy_max], y_range=[0, xy_max], z_range=[
         0, 30], folder='data/train/')
-    dataloader = DataLoader(dataset, batch_size=32,
+    dataloader = DataLoader(dataset, batch_size=1,
                             shuffle=True, num_workers=0)
     val_dataset = weatherDataSet(x_range=[0, xy_max], y_range=[0, xy_max], z_range=[
         0, 30], folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset, batch_size=64,
                                        shuffle=True, num_workers=16)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = Model(3, [xy_max, xy_max, 30])
+    model = Model(3, [xy_max, xy_max, 31])
 
     epochs = 2
     batch_size = 32
