@@ -2,23 +2,36 @@ years = [2017,2018,2019];
 days = [5,15];
 
 
-for year = 2018:2019
+% for year = 2018
+%     year
+%     for month = 1:12
+%         parfor day = 1:31
+%             disp([month,day])
+%             try
+%                 get_data_day(year,month,day,"data/train/");
+%             catch
+%                disp([year,day,month]) 
+%             end
+%         end
+%     end
+% end
+
+for year = 2019
     year
     parfor month = 1:12
-        for day_index = 1:2
-            days = [5,15]
-            day = days(day_index);
+        for day = 5:15:20
             month
-            get_data_day(year,month,day);
+            try
+                get_data_day(year,month,day,"data/validation/");
+            catch
+                disp([year,day,month])
+                try
+                    get_data_day(year,month,day+1,"data/validation/");
+                catch
+                   disp([year,day+1,month]) 
+                end
+            end
+            
         end
-    end
-end
-
-parfor month = 8:12
-    for day_index = 1:2
-        days = [5,15]
-        day = days(day_index);
-        month
-        get_data_day(2017,month,day);
     end
 end

@@ -38,6 +38,7 @@ class FullyConnectedModel(nn.Module):
         print(self.input_dimentions)
         self.layers = [np.prod(input_dimentions)*input_chanels, 500, 50]
         print(self.layers)
+
         self.encoder = nn.Sequential(
             nn.Linear(self.layers[0], self.layers[1]),
             nn.ReLU(),
@@ -58,60 +59,85 @@ class FullyConnectedModel(nn.Module):
         assert out.shape == x.shape
         return out
 
+
 class Model(nn.Module):
 
     def __init__(self,
                  image_channels,
                  input_dimentions):
-        """
-            Is called when model is initialized.
-            Args:
-                image_channels. Number of color channels in image (3)
-                num_classes: Number of classes we want to predict (10)
-        """
+
         super().__init__()
-        #Encoder
+        # Encoder
         stride_dim = (2, 2, 2)
         kernel_dim = (4, 4, 2)
-        self.num_filters = [2, 2, 2]
-        self.paddings = [0,0,0]
-        self.strides = [stride_dim,stride_dim,stride_dim]
-        self.kernels = [kernel_dim,kernel_dim,kernel_dim]
+        self.num_filters = [10, 12, 2]
+        self.paddings = [0, 0, 0]
+        self.strides = [stride_dim, stride_dim, stride_dim]
+        self.kernels = [kernel_dim, kernel_dim, kernel_dim]
         self.encoded = None
 
-        self.conv1 = nn.Conv3d(image_channels, self.num_filters[0], 3, padding=1)  
+        self.conv1 = nn.Conv3d(
+            in_channels=image_channels,
+            out_channels=self.num_filters[0],
+            kernel_size=3,
+            padding=1)
 
-        self.conv2 = nn.Conv3d(self.num_filters[0], self.num_filters[1], 3, padding=1)
+        self.conv2 = nn.Conv3d(
+            in_channels=self.num_filters[0],
+            out_channels=self.num_filters[1],
+            kernel_size=3,
+            padding=1)
 
-        self.pool = nn.MaxPool3d(kernel_size=2,stride=2,return_indices=True)
-        self.unpool = nn.MaxUnpool3d(kernel_size=2,stride=2)
-        ## decoder layers ##
-        ## a kernel of 2 and a stride of 2 will increase the spatial dims by 2
+        self.conv3 = nn.Conv3d(
+            in_channels=self.num_filters[1],
+            out_channels=self.num_filters[2],
+            kernel_size=3,
+            padding=1)
+
+        self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
+        self.unpool = nn.MaxUnpool3d(kernel_size=2, stride=2)
+
+        # decoder layers
         self.t_conv1 = nn.ConvTranspose3d(
-            in_channels = self.num_filters[1],
-            out_channels = self.num_filters[0],
-            kernel_size = 2,
-            stride = 1,)
-        
-        self.t_conv1 = nn.ConvTranspose3d(
-            in_channels = self.num_filters[0],
-            out_channels = image_channels,
-            kernel_size = 2,
-            stride = 1)
-        
-        self.pool_indecies = [()]
+            in_channels=self.num_filters[2],
+            out_channels=self.num_filters[1],
+            kernel_size=3,
+            padding=1,
+            stride=1,
+        )
 
-    def encode(self,x):
+        self.t_conv2 = nn.ConvTranspose3d(
+            in_channels=self.num_filters[1],
+            out_channels=self.num_filters[0],
+            kernel_size=3,
+            padding=1,
+            stride=1
+        )
+
+        self.t_conv3 = nn.ConvTranspose3d(
+            in_channels=self.num_filters[0],
+            out_channels=image_channels,
+            kernel_size=3,
+            padding=1,
+            stride=1
+        )
+
+        self.pool_indecies = [(), ()]
+
+    def encode(self, x):
         x = self.conv1(x)
-        (x,pool_idx) = self.pool(x)
+        (x, self.pool_indecies[0]) = self.pool(x)
         x = self.conv2(x)
-        self.pool_indecies[0] = pool_idx
+        (x, self.pool_indecies[1]) = self.pool(x)
+        x = self.conv3(x)
         return x
 
-    def decode(self,x):
-        x1 = self.t_conv1(x)
-        x = self.unpool(x1,self.pool_indecies[0])
+    def decode(self, x):
+        x = self.t_conv1(x)
+        x = self.unpool(x, self.pool_indecies[1])
         x = self.t_conv2(x)
+        x = self.unpool(x, self.pool_indecies[0])
+        x = self.t_conv3(x)
         return x
 
     def forward(self, x):
@@ -125,20 +151,29 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    x_dim = 125
-    dataset = weatherDataSet(x_range=[0, x_dim], y_range=[0, x_dim], z_range=[
-        0, 30], folder='data/train/')
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)
-    val_dataset = weatherDataSet(x_range=[0, x_dim], y_range=[0, x_dim], z_range=[0, 30], folder='data/validation/')
-    validation_dataloader = DataLoader(val_dataset, batch_size=64,
-                                       shuffle=True, num_workers=4)
-    dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = Model(3, [31, x_dim, x_dim])
-
-    epochs = 10
+    x_dim = 128
     batch_size = 32
+    epochs = 1
     learning_rate = 1e-3
     early_stop_count = 5
+    dataset = weatherDataSet(x_range=[0, x_dim],
+                             y_range=[0, x_dim],
+                             z_range=[0, 32],
+                             folder='data/train/')
+    dataloader = DataLoader(dataset,
+                            batch_size=batch_size,
+                            shuffle=True,
+                            num_workers=0)
+    val_dataset = weatherDataSet(x_range=[0, x_dim],
+                                 y_range=[0, x_dim],
+                                 z_range=[0, 32],
+                                 folder='data/validation/')
+    validation_dataloader = DataLoader(val_dataset,
+                                       batch_size=64,
+                                       shuffle=True,
+                                       num_workers=4)
+    dataloaders = (dataloader, validation_dataloader, validation_dataloader)
+    model = Model(3, [32, x_dim, x_dim])
 
     trainer = trainer.Trainer(
         batch_size,
@@ -168,8 +203,7 @@ if __name__ == "__main__":
         #plotting.plot_histogram(data_sample[:,1,:,:,:], reconstructed[:,1,:,:,:] ,title='y',bins=20)
 
         #plotting.plot_histogram(data_sample[:, 2,:,:,:], reconstructed[:, 2,:,:,:], title='up', bins=20)
-        plotting.plot_contour(data, reconstructed ,title='x')
+        plotting.plot_contour(data, reconstructed, title='x')
 
-        
         plt.show(block=False)
         input("Press key to exit")

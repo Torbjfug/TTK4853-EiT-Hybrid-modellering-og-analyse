@@ -32,7 +32,9 @@ class weatherDataSet(Dataset):
                              x_range[0]:x_range[1]]
                 # val = f[key][x_range[0]:x_range[1], y_range[0]:y_range[1],
                 #              z_range[0]:z_range[1], time]
-                val = (val - self.means[key]) / self.stds[key]
+                min_val = np.nanmin(val)
+                max_val = np.nanmax(val)
+                val = (val - min_val) / (max_val-min_val)
                 tensor_data[i, :, :, :] = torch.from_numpy(val)
 
         return tensor_data
