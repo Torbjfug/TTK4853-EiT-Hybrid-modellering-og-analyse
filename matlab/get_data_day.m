@@ -9,7 +9,7 @@ function get_data_day(year, month, day,folder)
     %air_pressure_ml =  get_data(year, month, day, 'air_pressure_ml', x_begin, x_end, y_begin, y_end, l_begin, l_end, 0, 12);
     %turbulence_index_ml =  get_data(year, month, day, 'turbulence_index_ml', x_begin, x_end, y_begin, y_end, l_begin, l_end, 0, 12);
     %turbulence_dissipation_ml =  get_data(year, month, day, 'turbulence_dissipation_ml', x_begin, x_end, y_begin, y_end, l_begin, l_end, 0, 12);
-    if any(isnan(x_wind_ml(:))) || any(isnan(y_wind_ml(:))) || any(isnan(upward_air_velocity_ml(:)))
+    if any(isnan(x_wind_ml(:))) || any(isnan(y_wind_ml(:))) || any(isnan(upward_air_velocity_ml(:))) || std(x_wind_ml(:))==0 || std(y_wind_ml(:))==0 || std(upward_air_velocity_ml(:))==0
         error('Invalid data') 
     else
         filename = sprintf(folder+"%d_%02d_%02d",year,month,day);

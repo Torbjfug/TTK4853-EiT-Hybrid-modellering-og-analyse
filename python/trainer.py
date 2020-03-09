@@ -8,6 +8,11 @@ import typing
 import collections
 import utils
 from utils import compute_loss
+from tqdm import tqdm
+
+
+def loss_funk(X_pred, X):
+    return (((X-X_pred)/(torch.abs(X)+0.01))**2).mean()
 
 
 class Trainer:
@@ -27,17 +32,14 @@ class Trainer:
         self.early_stop_count = early_stop_count
         self.epochs = epochs
 
-        # Since we are doing multi-class classification, we use CrossEntropyLoss
-        self.loss_criterion = nn.MSELoss()
+        #self.loss_criterion = nn.MSELoss()
+        self.loss_criterion = loss_funk
         # Initialize the model
         self.model = model
         # Transfer model to GPU VRAM, if possible.
-        #self.model = utils.to_cuda(self.model)
+        self.model = utils.to_cuda(self.model)
         print(self.model)
 
-        # Define our optimizer. SGD = Stochastich Gradient Descent
-        # self.optimizer = torch.optim.SGD(self.model.parameters(),
-        #                                  self.learning_rate, momentum=0.9)
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), learning_rate)
 
@@ -51,10 +53,8 @@ class Trainer:
 
         # Tracking variables
         self.VALIDATION_LOSS = collections.OrderedDict()
-        self.TEST_LOSS = collections.OrderedDict()
         self.TRAIN_LOSS = collections.OrderedDict()
         self.VALIDATION_ACC = collections.OrderedDict()
-        self.TEST_ACC = collections.OrderedDict()
 
         self.checkpoint_dir = pathlib.Path(
             "checkpoints")
@@ -76,11 +76,6 @@ class Trainer:
             f"Global step: {self.global_step:>6}",
             f"Validation Loss: {validation_loss:.4f},",
             sep="\t")
-        # Compute for testing set
-        #test_loss = compute_loss(
-        #    self.dataloader_test, self.model, self.loss_criterion
-        #)
-        #self.TEST_LOSS[self.global_step] = test_loss
 
         self.model.train()
 
@@ -111,7 +106,7 @@ class Trainer:
         for epoch in range(self.epochs):
             self.epoch = epoch
             # Perform a full pass through all the training samples
-            for X_batch in self.dataloader_train:
+            for X_batch in tqdm(self.dataloader_train):
 
                 # Perform the forward pass
                 X_batch = utils.to_cuda(X_batch)
@@ -166,4 +161,7 @@ def create_plots(trainer: Trainer, name: str):
     utils.plot_loss(trainer.TRAIN_LOSS, label="Training loss")
     utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
     plt.legend()
+
+    plt.ylim([0, 0.8])
+    plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()

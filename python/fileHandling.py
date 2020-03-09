@@ -52,9 +52,9 @@ def update_dataset(filename, prev_v, next_v):
     if prev_v == 1 and next_v == 2:
         norm_metrics = {}
         norm_metrics['std'] = np.nanstd
-        norm_metrics['mean'] = np.mean
-        norm_metrics['min'] = np.max
-        norm_metrics['max'] = np.min
+        norm_metrics['mean'] = np.nanmean
+        norm_metrics['min'] = np.nanmax
+        norm_metrics['max'] = np.nanmin
 
         with h5py.File(filename, 'a') as f:
             for key in f.keys():
@@ -78,3 +78,4 @@ def delete_old_files(path):
 
 if __name__ == "__main__":
     # delete_old_files('data/validation/')
+    1
