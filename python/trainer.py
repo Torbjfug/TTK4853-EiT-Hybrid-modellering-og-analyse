@@ -76,6 +76,11 @@ class Trainer:
             f"Global step: {self.global_step:>6}",
             f"Validation Loss: {validation_loss:.4f},",
             sep="\t")
+        # Compute for testing set
+        # test_loss = compute_loss(
+        #    self.dataloader_test, self.model, self.loss_criterion
+        # )
+        #self.TEST_LOSS[self.global_step] = test_loss
 
         self.model.train()
 

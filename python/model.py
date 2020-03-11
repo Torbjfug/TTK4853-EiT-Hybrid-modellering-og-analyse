@@ -118,6 +118,7 @@ class Model(nn.Module):
         self.encoded = self.encode(x)
         out = self.decode(self.encoded)
         # print("X: ", x.shape)
+        # print("Xec: ", x_ec.shape)
         # print("Encode: ", self.encoded.shape)
         # print("out", out.shape)
         assert out.shape == x.shape

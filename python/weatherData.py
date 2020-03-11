@@ -5,6 +5,7 @@ import h5py
 import numpy as np
 from torch.utils.data import DataLoader
 import torch
+import time
 
 
 class weatherDataSet(Dataset):
@@ -28,7 +29,7 @@ class weatherDataSet(Dataset):
                      y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
             for i, key in enumerate(keys):
-                val = f[key][time, z_range[0]:z_range[1], y_range[0]:y_range[1],
+                val = f[key][hour, z_range[0]:z_range[1], y_range[0]:y_range[1],
                              x_range[0]:x_range[1]]
                 # val = f[key][x_range[0]:x_range[1], y_range[0]:y_range[1],
                 #              z_range[0]:z_range[1], time]
@@ -47,7 +48,7 @@ class weatherDataSet(Dataset):
     def __getitem__(self, idx):
         hour = idx % 13
         data = self.load_file_tensor(
-            self.folder + self.filenames[idx // 13], self.x_range, self.y_range, self.z_range, time=hour)
+            self.folder + self.filenames[idx // 13], self.x_range, self.y_range, self.z_range, hour=hour)
         return data
 
 

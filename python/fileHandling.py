@@ -76,6 +76,19 @@ def delete_old_files(path):
                 os.remove(path+filename)
 
 
+def delete_bad_data(folder):
+    for filename in tqdm(os.listdir(folder)):
+        if filename.endswith('.mat'):
+            data = load_hdf5(folder + filename)
+            for key in data.keys():
+                if np.isnan(np.mean(data[key])):
+                    print(key, filename)
+                    os.remove(folder+filename)
+                    break
+
+
 if __name__ == "__main__":
-    # delete_old_files('data/validation/')
-    1
+    # delete_bad_data('data/validation/')
+    data = load_hdf5('data/train/2018_01_01.mat')
+    print(data.keys())
+    print(data['x_wind_ml'].shape)
