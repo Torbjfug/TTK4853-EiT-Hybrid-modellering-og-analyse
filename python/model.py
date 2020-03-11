@@ -37,12 +37,12 @@ class Model(nn.Module):
 
         super().__init__()
         self.compression_rate = 0.1
-        self.num_filters = [64, 128, 256]
+        self.num_filters = [64, 64, 64]
         self.encoded = None
         cov_layers = len(self.num_filters)
         input_data_points = image_channels*np.prod(input_dimentions)
         self.conv_output_shape = (self.num_filters[-1], input_dimentions[0]//(
-            (cov_layers-1)**2), input_dimentions[1]//((cov_layers-1)**2), input_dimentions[2]//((cov_layers-1)**2))
+            (cov_layers)**2), input_dimentions[1]//((cov_layers)**2), input_dimentions[2]//((cov_layers)**2))
 
         self.dense_neurons = [
             np.prod(list(self.conv_output_shape)), int(input_data_points*self.compression_rate)]
@@ -51,6 +51,20 @@ class Model(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv3d(
                 in_channels=image_channels,
+                out_channels=self.num_filters[0],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[0]),
+            nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[0],
+                out_channels=self.num_filters[0],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[0]),
+            nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[0],
                 out_channels=self.num_filters[0],
                 kernel_size=3,
                 padding=1),
@@ -66,11 +80,39 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[1]),
             nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[1],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[1]),
+            nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[1],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[1]),
+            nn.ReLU(),
         )
 
         self.conv3 = nn.Sequential(
             nn.Conv3d(
                 in_channels=self.num_filters[1],
+                out_channels=self.num_filters[2],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[2]),
+            nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[2],
+                out_channels=self.num_filters[2],
+                kernel_size=3,
+                padding=1),
+            nn.BatchNorm3d(num_features=self.num_filters[2]),
+            nn.ReLU(),
+            nn.Conv3d(
+                in_channels=self.num_filters[2],
                 out_channels=self.num_filters[2],
                 kernel_size=3,
                 padding=1),
@@ -85,6 +127,24 @@ class Model(nn.Module):
         self.t_conv1 = nn.Sequential(
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[2],
+                out_channels=self.num_filters[2],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[2]),
+            nn.ReLU(),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[2],
+                out_channels=self.num_filters[2],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[2]),
+            nn.ReLU(),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[2],
                 out_channels=self.num_filters[1],
                 kernel_size=3,
                 padding=1,
@@ -95,6 +155,24 @@ class Model(nn.Module):
         )
 
         self.t_conv2 = nn.Sequential(
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[1],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[1]),
+            nn.ReLU(),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[1],
+                out_channels=self.num_filters[1],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[1]),
+            nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[1],
                 out_channels=self.num_filters[0],
@@ -109,6 +187,24 @@ class Model(nn.Module):
         self.t_conv3 = nn.Sequential(
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
+                out_channels=self.num_filters[0],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[0]),
+            nn.ReLU(),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[0],
+                out_channels=self.num_filters[0],
+                kernel_size=3,
+                padding=1,
+                stride=1,
+            ),
+            nn.BatchNorm3d(num_features=self.num_filters[0]),
+            nn.ReLU(),
+            nn.ConvTranspose3d(
+                in_channels=self.num_filters[0],
                 out_channels=image_channels,
                 kernel_size=3,
                 padding=1,
@@ -116,7 +212,7 @@ class Model(nn.Module):
             ),
         )
 
-        self.pool_indecies = [(), ()]
+        self.pool_indecies = [(), (), ()]
         self.activation = nn.ReLU()
         self.dropout = nn.Dropout(0.1)
 
@@ -127,7 +223,7 @@ class Model(nn.Module):
                 out_features=self.dense_neurons[1]
             ),
             nn.BatchNorm1d(self.dense_neurons[1]),
-            nn.ReLU()
+            nn.ReLU(),
         )
 
         self.decode_linear = nn.Sequential(
@@ -146,13 +242,15 @@ class Model(nn.Module):
         self.dropout(x)
         (x, self.pool_indecies[1]) = self.pool(x)
         x = self.conv3(x)
-        x = x.view((-1, self.dense_neurons[0]))
-        x = self.encode_linear(x)
+        (x, self.pool_indecies[2]) = self.pool(x)
+        #x = x.view((-1, self.dense_neurons[0]))
+        #x = self.encode_linear(x)
         return x
 
     def decode(self, x):
-        x = self.decode_linear(x)
-        x = x.view((-1,)+self.conv_output_shape)
+        #x = self.decode_linear(x)
+        #x = x.view((-1,)+self.conv_output_shape)
+        x = self.unpool(x, self.pool_indecies[2])
         x = self.t_conv1(x)
         self.dropout(x)
         x = self.unpool(x, self.pool_indecies[1])
@@ -174,21 +272,21 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    test_name = "Dropout"
+    test_name = "MoreConv"
     x_dim = 32
     z_dim = 32
     batch_size = 32
-    epochs = 5
+    epochs = 3
     learning_rate = 1e-3
     early_stop_count = 4
     dataset = weatherDataSet(x_range=[0, x_dim],
                              y_range=[0, x_dim],
                              z_range=[0, z_dim],
-                             folder='data/validation/')
+                             folder='data/train/')
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=0)
+                            num_workers=4)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
                                  z_range=[0, z_dim],
@@ -196,7 +294,7 @@ if __name__ == "__main__":
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=64,
                                        shuffle=True,
-                                       num_workers=0)
+                                       num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(3, [z_dim, x_dim, x_dim])
 
@@ -232,13 +330,13 @@ if __name__ == "__main__":
     plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
     plt.savefig('plots/arrows.png')
     plotting.plot_histogram(
-        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=20)
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=50)
     plt.savefig('plots/x_hist.png')
     plotting.plot_histogram(
-        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=20)
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=50)
     plt.savefig('plots/y_hist.png')
     plotting.plot_histogram(
-        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=20)
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=50)
     plt.savefig('plots/up_hist.png')
     plotting.plot_contour(data, reconstructed, title='x')
     plt.savefig('plots/contour_hist.png')
