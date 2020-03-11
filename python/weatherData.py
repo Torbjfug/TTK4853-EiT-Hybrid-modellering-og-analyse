@@ -17,9 +17,6 @@ class weatherDataSet(Dataset):
         self.filenames = [f for f in os.listdir(folder)
                           if f.endswith('.mat') and os.path.isfile(os.path.join(folder, f))]
 
-        self.means = load_hdf5('means.hdf5')
-        self.stds = load_hdf5('stds.hdf5')
-
     def load_file_tensor(self, filename, x_range=[0, 128], y_range=[0, 128], z_range=[0, 32], hour=0):
         with h5py.File(filename, 'r') as f:
 
@@ -28,6 +25,7 @@ class weatherDataSet(Dataset):
             shape = (z_range[1]-z_range[0], y_range[1] -
                      y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
+            norm_params = {}
             for i, key in enumerate(keys):
                 val = f[key][hour, z_range[0]:z_range[1], y_range[0]:y_range[1],
                              x_range[0]:x_range[1]]
@@ -35,21 +33,22 @@ class weatherDataSet(Dataset):
                 #              z_range[0]:z_range[1], time]
                 min_val = np.nanmin(val)
                 max_val = np.nanmax(val)
+                norm_params[key] = [min_val, max_val]
                 val = (val - min_val) / (max_val-min_val)
                 tensor_data[i, :, :, :] = torch.from_numpy(val)
                 if np.any(np.isnan(val)):
                     print(filename)
 
-        return tensor_data
+        return tensor_data, norm_params
 
     def __len__(self):
         return len(self.filenames)*13
 
     def __getitem__(self, idx):
         hour = idx % 13
-        data = self.load_file_tensor(
+        data, norm_params = self.load_file_tensor(
             self.folder + self.filenames[idx // 13], self.x_range, self.y_range, self.z_range, hour=hour)
-        return data
+        return data, norm_params
 
 
 if __name__ == "__main__":

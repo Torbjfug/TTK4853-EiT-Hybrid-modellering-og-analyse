@@ -117,7 +117,7 @@ def compute_loss(
     total_loss = 0
     total_seps = 0
     with torch.no_grad():
-        for X_batch in dataloader:
+        for X_batch, _normparams in dataloader:
             # Transfer images/labels to GPU VRAM, if possible
             X_batch = to_cuda(X_batch)
             # Forward pass the images through our model
