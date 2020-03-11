@@ -20,7 +20,7 @@ class weatherDataSet(Dataset):
         self.means = load_hdf5('means.hdf5')
         self.stds = load_hdf5('stds.hdf5')
 
-    def load_file_tensor(self, filename, x_range=[0, 128], y_range=[0, 128], z_range=[0, 32], time=0):
+    def load_file_tensor(self, filename, x_range=[0, 128], y_range=[0, 128], z_range=[0, 32], hour=0):
         with h5py.File(filename, 'r') as f:
 
             keys = list(f.keys())

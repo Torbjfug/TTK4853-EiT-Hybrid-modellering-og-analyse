@@ -2,6 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
+import pickle
 np.random.seed(0)
 torch.manual_seed(0)
 # Allow torch/cudnn to optimize/analyze the input/output shape of convolutions
@@ -61,6 +62,23 @@ def save_checkpoint(state_dict: dict,
     previous_checkpoints = previous_checkpoints[:max_keep]
     with open(list_path, 'w') as fp:
         fp.write("\n".join(previous_checkpoints))
+
+
+def save_training_statistics(statistic, filepath, filename):
+    filepath.parent.mkdir(exist_ok=True, parents=True)
+    list_path = filepath.parent.joinpath(filename)
+
+    f = open(list_path, 'wb')
+    pickle.dump(statistic, f)
+    f.close()
+
+
+def load_training_statistic(filepath, filename):
+    list_path = filepath.parent.joinpath(filename)
+    f = open(list_path, "rb")
+    statistic = pickle.load(f)
+    f.close()
+    return statistic
 
 
 def get_previous_checkpoints(directory: pathlib.Path) -> list:

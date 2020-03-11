@@ -141,5 +141,6 @@ all_files.hdf5
 data/*
 
 **/checkpoints/
-
+**/statistic/*
+**/plots/*
 *.DS_Store

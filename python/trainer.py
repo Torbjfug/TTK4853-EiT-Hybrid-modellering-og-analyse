@@ -23,7 +23,8 @@ class Trainer:
                  early_stop_count: int,
                  epochs: int,
                  model: torch.nn.Module,
-                 dataloaders: typing.List[torch.utils.data.DataLoader]):
+                 dataloaders: typing.List[torch.utils.data.DataLoader],
+                 name: str):
         """
             Initialize our trainer class.
         """
@@ -54,10 +55,10 @@ class Trainer:
         # Tracking variables
         self.VALIDATION_LOSS = collections.OrderedDict()
         self.TRAIN_LOSS = collections.OrderedDict()
-        self.VALIDATION_ACC = collections.OrderedDict()
 
-        self.checkpoint_dir = pathlib.Path(
-            "checkpoints")
+        self.name = name
+        self.checkpoint_dir = pathlib.Path(f"checkpoints/{name}")
+        self.statistic_dir = pathlib.Path(f"statistic/{name}")
 
     def validation_epoch(self):
         """
@@ -133,6 +134,7 @@ class Trainer:
                 if should_validate_model():
                     self.validation_epoch()
                     self.save_model()
+                    self.save_statistic()
                     if self.should_early_stop():
                         print("Early stopping.")
                         return
@@ -145,8 +147,8 @@ class Trainer:
             validation_losses = list(self.VALIDATION_LOSS.values())
             return validation_losses[-1] == min(validation_losses)
         state_dict = self.model.state_dict()
-        filepath = self.checkpoint_dir.joinpath(f"{self.global_step}.ckpt")
-        utils.save_checkpoint(state_dict, filepath, is_best_model())
+        cpt_filepath = self.checkpoint_dir.joinpath(f"{self.global_step}.ckpt")
+        utils.save_checkpoint(state_dict, cpt_filepath, is_best_model())
 
     def load_best_model(self):
         state_dict = utils.load_best_checkpoint(self.checkpoint_dir)
@@ -155,6 +157,19 @@ class Trainer:
                 f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
             return
         self.model.load_state_dict(state_dict)
+
+    def save_statistic(self):
+        statistics = {"val_loss": self.VALIDATION_LOSS,
+                      "train_loss": self.TRAIN_LOSS}
+        utils.save_training_statistics(
+            statistics, self.statistic_dir, self.name)
+
+    def load_statistic(self, name):
+        statistics = utils.load_training_statistic(self.statistic_dir, name)
+        if "val_loss" in statistics.keys():
+            self.VALIDATION_LOSS = statistics['val_loss']
+        if "train_loss" in statistics.keys():
+            self.TRAIN_LOSS = statistics['train_loss']
 
 
 def create_plots(trainer: Trainer, name: str):
@@ -167,6 +182,6 @@ def create_plots(trainer: Trainer, name: str):
     utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
     plt.legend()
 
-    plt.ylim([0, 0.8])
+    #plt.ylim([0, 0.8])
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
-    plt.show()
+    plt.show(block=False)

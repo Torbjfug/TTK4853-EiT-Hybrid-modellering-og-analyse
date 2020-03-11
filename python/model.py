@@ -126,29 +126,30 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    x_dim = 32
+    x_dim = 16
+    z_dim = 16
     batch_size = 32
     epochs = 5
     learning_rate = 1e-3
     early_stop_count = 4
     dataset = weatherDataSet(x_range=[0, x_dim],
                              y_range=[0, x_dim],
-                             z_range=[0, 32],
-                             folder='data/train/')
+                             z_range=[0, z_dim],
+                             folder='data/validation/')
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=4)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
-                                 z_range=[0, 32],
+                                 z_range=[0, z_dim],
                                  folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=64,
                                        shuffle=True,
                                        num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = Model(3, [32, x_dim, x_dim])
+    model = Model(3, [z_dim, x_dim, x_dim])
 
     trainer = trainer.Trainer(
         batch_size,
@@ -156,16 +157,19 @@ if __name__ == "__main__":
         early_stop_count,
         epochs,
         model,
-        dataloaders
+        dataloaders,
+        "test"
     )
 
     print(torch.cuda.is_available())
-    train = True
+    train = False
     if train:
         trainer.train()
         create_plots(trainer, "test")
     else:
         trainer.load_best_model()
+        trainer.load_statistic('test')
+        create_plots(trainer, "test2")
     data_sample = utils.to_cuda(next(iter(validation_dataloader)))
     #reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
     trainer.model.eval()
