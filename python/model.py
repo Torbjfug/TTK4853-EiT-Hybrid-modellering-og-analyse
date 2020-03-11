@@ -13,6 +13,7 @@ from utils import compute_loss
 from trainer import create_plots
 import trainer
 
+
 import plotting
 
 
@@ -36,12 +37,7 @@ class Model(nn.Module):
 
         super().__init__()
         # Encoder
-        stride_dim = (2, 2, 2)
-        kernel_dim = (4, 4, 2)
         self.num_filters = [64, 128, 256]
-        self.paddings = [0, 0, 0]
-        self.strides = [stride_dim, stride_dim, stride_dim]
-        self.kernels = [kernel_dim, kernel_dim, kernel_dim]
         self.encoded = None
 
         self.conv1 = nn.Sequential(
@@ -71,7 +67,7 @@ class Model(nn.Module):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[2]),
-            # nn.ReLU(),
+            nn.ReLU(),
         )
 
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
@@ -114,24 +110,25 @@ class Model(nn.Module):
 
         self.pool_indecies = [(), ()]
         self.activation = nn.ReLU()
+        self.dropout = nn.Dropout(0.1)
 
     def encode(self, x):
         x = self.conv1(x)
-        # self.activation(x)
+        self.dropout(x)
         (x, self.pool_indecies[0]) = self.pool(x)
         x = self.conv2(x)
-        # self.activation(x)
+        self.dropout(x)
         (x, self.pool_indecies[1]) = self.pool(x)
         x = self.conv3(x)
-        # self.activation(x)
+        self.activation(x)
         return x
 
     def decode(self, x):
         x = self.t_conv1(x)
-        self.activation(x)
+        self.dropout(x)
         x = self.unpool(x, self.pool_indecies[1])
         x = self.t_conv2(x)
-        # self.activation(x)
+        self.dropout(x)
         x = self.unpool(x, self.pool_indecies[0])
         x = self.t_conv3(x)
         return x
@@ -148,21 +145,21 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    test_name = "Add_batch_norm"
-    x_dim = 16
-    z_dim = 16
+    test_name = "Dropout"
+    x_dim = 32
+    z_dim = 32
     batch_size = 32
-    epochs = 1
+    epochs = 5
     learning_rate = 1e-3
     early_stop_count = 4
     dataset = weatherDataSet(x_range=[0, x_dim],
                              y_range=[0, x_dim],
                              z_range=[0, z_dim],
-                             folder='data/validation/')
+                             folder='data/train/')
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=0)
+                            num_workers=4)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
                                  z_range=[0, z_dim],
@@ -170,7 +167,7 @@ if __name__ == "__main__":
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=64,
                                        shuffle=True,
-                                       num_workers=0)
+                                       num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(3, [z_dim, x_dim, x_dim])
 
@@ -185,15 +182,16 @@ if __name__ == "__main__":
     )
 
     print(torch.cuda.is_available())
-    train = False
+    train = True
     if train:
         trainer.train()
         create_plots(trainer, test_name)
     else:
         trainer.load_best_model()
-        trainer.load_statistic('test')
-        create_plots(trainer, "test2")
+        trainer.load_statistic(test_name)
+        create_plots(trainer, test_name)
     data_sample, norm_params = next(iter(validation_dataloader))
+    data_sample = utils.to_cuda(data_sample)
     # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
     trainer.model.eval()
     reconstructed = model(data_sample)
@@ -203,17 +201,17 @@ if __name__ == "__main__":
     data = data_sample.cpu().detach().numpy()
     reconstructed = reconstructed.cpu().detach().numpy()
     plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
-    plt.show()
-    # plotting.plot_histogram(
-    #     data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=20)
-    # plt.savefig('plots/x_hist.png')
-    # plotting.plot_histogram(
-    #     data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=20)
-    # plt.savefig('plots/y_hist.png')
-    # plotting.plot_histogram(
-    #     data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=20)
-    # plt.savefig('plots/up_hist.png')
-    # plotting.plot_contour(data, reconstructed, title='x')
-    # plt.savefig('plots/contour_hist.png')
-    # plt.show(block=False)
-    # input("Press key to exit")
+    plt.savefig('plots/arrows.png')
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=20)
+    plt.savefig('plots/x_hist.png')
+    plotting.plot_histogram(
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=20)
+    plt.savefig('plots/y_hist.png')
+    plotting.plot_histogram(
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=20)
+    plt.savefig('plots/up_hist.png')
+    plotting.plot_contour(data, reconstructed, title='x')
+    plt.savefig('plots/contour_hist.png')
+    plt.show(block=False)
+    input("Press key to exit")
