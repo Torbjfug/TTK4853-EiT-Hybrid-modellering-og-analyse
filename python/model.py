@@ -36,10 +36,18 @@ class Model(nn.Module):
                  input_dimentions):
 
         super().__init__()
-        # Encoder
+        self.compression_rate = 0.1
         self.num_filters = [64, 128, 256]
         self.encoded = None
+        cov_layers = len(self.num_filters)
+        input_data_points = image_channels*np.prod(input_dimentions)
+        self.conv_output_shape = (self.num_filters[-1], input_dimentions[0]//(
+            (cov_layers-1)**2), input_dimentions[1]//((cov_layers-1)**2), input_dimentions[2]//((cov_layers-1)**2))
 
+        self.dense_neurons = [
+            np.prod(list(self.conv_output_shape)), int(input_data_points*self.compression_rate)]
+
+        # Encoder
         self.conv1 = nn.Sequential(
             nn.Conv3d(
                 in_channels=image_channels,
@@ -69,7 +77,7 @@ class Model(nn.Module):
             nn.BatchNorm3d(num_features=self.num_filters[2]),
             nn.ReLU(),
         )
-
+        # Pooling
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
         self.unpool = nn.MaxUnpool3d(kernel_size=2, stride=2)
 
@@ -112,6 +120,24 @@ class Model(nn.Module):
         self.activation = nn.ReLU()
         self.dropout = nn.Dropout(0.1)
 
+        # Linear layers
+        self.encode_linear = nn.Sequential(
+            nn.Linear(
+                in_features=self.dense_neurons[0],
+                out_features=self.dense_neurons[1]
+            ),
+            nn.BatchNorm1d(self.dense_neurons[1]),
+            nn.ReLU()
+        )
+
+        self.decode_linear = nn.Sequential(
+            nn.Linear(
+                in_features=self.dense_neurons[1],
+                out_features=self.dense_neurons[0]
+            ),
+            nn.ReLU()
+        )
+
     def encode(self, x):
         x = self.conv1(x)
         self.dropout(x)
@@ -120,10 +146,13 @@ class Model(nn.Module):
         self.dropout(x)
         (x, self.pool_indecies[1]) = self.pool(x)
         x = self.conv3(x)
-        self.activation(x)
+        x = x.view((-1, self.dense_neurons[0]))
+        x = self.encode_linear(x)
         return x
 
     def decode(self, x):
+        x = self.decode_linear(x)
+        x = x.view((-1,)+self.conv_output_shape)
         x = self.t_conv1(x)
         self.dropout(x)
         x = self.unpool(x, self.pool_indecies[1])
@@ -155,11 +184,11 @@ if __name__ == "__main__":
     dataset = weatherDataSet(x_range=[0, x_dim],
                              y_range=[0, x_dim],
                              z_range=[0, z_dim],
-                             folder='data/train/')
+                             folder='data/validation/')
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=4)
+                            num_workers=0)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
                                  z_range=[0, z_dim],
@@ -167,7 +196,7 @@ if __name__ == "__main__":
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=64,
                                        shuffle=True,
-                                       num_workers=4)
+                                       num_workers=0)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(3, [z_dim, x_dim, x_dim])
 
