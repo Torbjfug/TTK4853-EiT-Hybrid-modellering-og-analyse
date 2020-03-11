@@ -54,6 +54,34 @@ def plot_contour(original, decompressed, title=""):
     plt.colorbar(cax=cax, **kw)
 
 
+def plot_arrows3D(original, compressed, num_arrows):
+    data_size = original.shape
+    x_range = np.round(np.linspace(0, data_size[1]-1, num_arrows, dtype=int))
+    y_range = np.round(np.linspace(0, data_size[2]-1, num_arrows, dtype=int))
+    z_range = np.round(np.linspace(0, data_size[3]-1, num_arrows, dtype=int))
+
+    x, y, z = np.meshgrid(x_range,
+                          y_range,
+                          z_range)
+
+    u = compressed[0, x_range, y_range, z_range]
+    v = compressed[1, x_range, y_range, z_range]
+    w = compressed[2, x_range, y_range, z_range]
+
+    u2 = original[0, x_range, y_range, z_range]
+    v2 = original[1, x_range, y_range, z_range]
+    w2 = original[2, x_range, y_range, z_range]
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    ax.quiver(x, y, z, u, v, w, color=('b'), length=0.8,
+              normalize=False, label="Compressed")
+
+    ax.quiver(x, y, z, u2, v2, w2, color=('r'), length=0.8,
+              normalize=False, label="Original")
+
+
 if __name__ == "__main__":
     data = fileHandling.load_hdf5('data/calibration/2017_08_05.mat')
     plot_contour(data['x_wind_ml'], data['y_wind_ml'])
