@@ -75,9 +75,12 @@ def save_training_statistics(statistic, filepath, filename):
 
 def load_training_statistic(filepath, filename):
     list_path = filepath.parent.joinpath(filename)
-    f = open(list_path, "rb")
-    statistic = pickle.load(f)
-    f.close()
+    try:
+        f = open(list_path, "rb")
+        statistic = pickle.load(f)
+        f.close()
+    except:
+        statistic = {}
     return statistic
 
 

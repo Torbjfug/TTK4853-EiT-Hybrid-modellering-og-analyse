@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 
 def loss_funk(X_pred, X):
-    return (((X-X_pred)/(torch.abs(X)+0.01))**2).mean()
+    return ((1-(X_pred)/(torch.abs(X)+0.01))**2).mean()
 
 
 class Trainer:

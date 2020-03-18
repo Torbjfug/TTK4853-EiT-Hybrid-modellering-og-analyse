@@ -123,6 +123,28 @@ class Model(nn.Module):
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
         self.unpool = nn.MaxUnpool3d(kernel_size=2, stride=2)
 
+        self.upSize1 = nn.ConvTranspose3d(
+            in_channels=self.num_filters[2],
+            out_channels=self.num_filters[2],
+            kernel_size=4,
+            padding=1,
+            stride=2,
+        )
+        self.upSize2 = nn.ConvTranspose3d(
+            in_channels=self.num_filters[2],
+            out_channels=self.num_filters[1],
+            kernel_size=4,
+            padding=1,
+            stride=2,
+        )
+        self.upSize3 = nn.ConvTranspose3d(
+            in_channels=self.num_filters[1],
+            out_channels=self.num_filters[0],
+            kernel_size=4,
+            padding=1,
+            stride=2,
+        )
+
         # decoder layers
         self.t_conv1 = nn.Sequential(
             nn.ConvTranspose3d(
@@ -145,12 +167,12 @@ class Model(nn.Module):
             nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[2],
-                out_channels=self.num_filters[1],
+                out_channels=self.num_filters[2],
                 kernel_size=3,
                 padding=1,
                 stride=1,
             ),
-            nn.BatchNorm3d(num_features=self.num_filters[1]),
+            nn.BatchNorm3d(num_features=self.num_filters[2]),
             nn.ReLU(),
         )
 
@@ -250,13 +272,16 @@ class Model(nn.Module):
     def decode(self, x):
         #x = self.decode_linear(x)
         #x = x.view((-1,)+self.conv_output_shape)
-        x = self.unpool(x, self.pool_indecies[2])
+        #x = self.unpool(x, self.pool_indecies[2])
+        x = self.upSize1(x)
         x = self.t_conv1(x)
-        self.dropout(x)
-        x = self.unpool(x, self.pool_indecies[1])
+        # self.dropout(x)
+        #x = self.unpool(x, self.pool_indecies[1])
+        x = self.upSize2(x)
         x = self.t_conv2(x)
-        self.dropout(x)
-        x = self.unpool(x, self.pool_indecies[0])
+        # self.dropout(x)
+        #x = self.unpool(x, self.pool_indecies[0])
+        x = self.upSize3(x)
         x = self.t_conv3(x)
         return x
 
@@ -286,7 +311,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=4)
+                            num_workers=0)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
                                  z_range=[0, z_dim],
