@@ -1,0 +1,60 @@
+#Interpoleringsalgoritme
+
+#Lister med dataen:
+
+Geopotential = [100,220,330,430,560,670,770,880,1000]
+Vind_x = [10,11,12,13,14,15,16,17,18]
+Vind_y = [0,11,2,13,4,15,6,17,8]
+Vind_z = [10,1,12,3,14,5,16,7,18]
+Trykk = [150,200,250,300,350,400,450,500,550]
+
+#Grid er antall nye z-koordinater
+Grid = 12
+New_Vind_x = [0 for i in range(Grid)]
+New_Vind_y = [0 for i in range(Grid)]
+New_Vind_z = [0 for i in range(Grid)]
+New_Trykk = [0 for i in range(Grid)]
+z_coord = [0 for i in range(Grid)]
+
+#Finner maks og min geopotensiale
+Max_gp = 0
+Min_gp = 10000000
+for i in range(len(Geopotential)):
+    if Geopotential[i] > Max_gp:
+        Max_gp = Geopotential[i]
+    if Geopotential[i]<Min_gp:
+        Min_gp = Geopotential[i]
+
+Delta_gp = Max_gp-Min_gp
+#Ny spredning i z-koordinat:
+Deltaz = Delta_gp/Grid
+
+#Nye z-koordinater:
+for i in range(Grid):
+    z_coord[i] = Min_gp + Deltaz*i
+print(z_coord)
+
+
+for i in range(len(z_coord)):
+    #Finner først minste geopoteniale som er større enn z-koordinaten:
+    z_under = Min_gp
+    Index = 0
+    for j in range(len(Geopotential)):
+        if z_coord[i]-Geopotential[j]<=0:
+            z_under = Geopotential[j]
+            Index = j
+            break
+    print(z_under)
+    #Finner så den lineære vektingen:
+    Weight = (z_coord[i]-Geopotential[Index-1])/(Geopotential[Index]-Geopotential[Index-1])
+    print(Weight)
+    #Bruker så lineær interpolering:
+    New_Vind_x[i] = Vind_x[Index-1]*(1-Weight)+Vind_x[Index]*Weight
+    New_Vind_y[i] = Vind_y[Index-1]*(1-Weight)+Vind_y[Index]*Weight
+    New_Vind_z[i] = Vind_z[Index-1]*(1-Weight)+Vind_z[Index]*Weight
+    New_Trykk[i] = Trykk[Index-1]*(1-Weight)+Trykk[Index]*Weight
+    
+print(New_Vind_x)
+print(New_Vind_y)
+print(New_Vind_z)
+print(New_Trykk)
