@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
-#SBATCH --account=gustavoo
-#SBATCH --time=00:10:00
+#SBATCH --account=ie-itk
+#SBATCH --time=00:5:00
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=12000
