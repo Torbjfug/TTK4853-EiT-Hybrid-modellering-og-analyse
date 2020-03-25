@@ -189,8 +189,6 @@ px = data1[:,-1:]
 #    plt.show()
 
 
-
-
 #plt.plot(theta[0:29,0])
 #plt.show()
 #plt.plot(theta[30:59,0])

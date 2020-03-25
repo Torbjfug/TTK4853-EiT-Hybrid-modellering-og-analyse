@@ -23,11 +23,12 @@ z = False
 
 
 #doublecheck the data is there
-print(os.listdir("..\eit\SR\part1_eqation_discovery\data"))
+print(os.listdir("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data"))
 
 # read in the data to pandas
-navier_data = pd.read_csv("..\eit\SR\part1_eqation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')      
+navier_data = pd.read_csv("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')      
 # In[46]:
+
 
 msk = np.random.rand(len(navier_data)) < 0.8
 train = navier_data[msk]
@@ -73,7 +74,7 @@ px          = train.px.values  # this is our target, now mapped to Y
 #pz         = train.pz.values  # this is our target, now mapped to Y
 
 # In[56]:
-
+print(px)
 
 # as a test I'm going to try and accelerate the fitness function
 from numba import jit
