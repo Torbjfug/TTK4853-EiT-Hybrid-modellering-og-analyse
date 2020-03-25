@@ -5,9 +5,9 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=12000
-#SBATCH --job-name="hello_test"
+#SBATCH --job-name="EiT hybrid modelling and analyseis"
 #SBATCH --output=test-srun.out
-#SBATCH --mail-user=<email>
+#SBATCH --mail-user=gustavoo@stud.ntnu.no
 #SBATCH --mail-type=ALL
  
 WORKDIR=${SLURM_SUBMIT_DIR}
