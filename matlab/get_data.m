@@ -38,6 +38,10 @@ function data = get_data(year, month, day,  data_type, x_begin, x_end, y_begin, 
          time_begin, time_end, height_begin, height_end, y_begin, y_end, x_begin, x_end);
     disp(data_type)
     data = ncread(url, data_type);
-    data(abs(data) > 2e3) = NaN;
+    if strcmp('air_pressure_ml',data_type)
+        data(abs(data) > 2e9) = NaN;
+    else
+        data(abs(data) > 1e3) = NaN;
+    end
 end
 
