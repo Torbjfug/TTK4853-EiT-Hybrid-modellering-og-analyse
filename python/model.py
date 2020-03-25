@@ -7,13 +7,13 @@ import time
 import typing
 import collections
 import utils
+import weatherData
+from torchsummary import summary
 from weatherData import weatherDataSet
 from torch.utils.data import DataLoader
 from utils import compute_loss
 from trainer import create_plots
 import trainer
-
-
 import plotting
 
 
@@ -36,16 +36,15 @@ class Model(nn.Module):
                  input_dimentions):
 
         super().__init__()
-        self.compression_rate = 0.1
-        self.num_filters = [64, 64, 64]
+        self.num_filters = [16, 32, 64]
         self.encoded = None
         cov_layers = len(self.num_filters)
         input_data_points = image_channels*np.prod(input_dimentions)
         self.conv_output_shape = (self.num_filters[-1], input_dimentions[0]//(
-            (cov_layers)**2), input_dimentions[1]//((cov_layers)**2), input_dimentions[2]//((cov_layers)**2))
-
-        self.dense_neurons = [
-            np.prod(list(self.conv_output_shape)), int(input_data_points*self.compression_rate)]
+            2**(cov_layers-0)), input_dimentions[1]//(2**(cov_layers-0)), input_dimentions[2]//(2**(cov_layers-0)))
+        #self.conv_output_shape = (self.num_filters[-1],4,4,4)
+        # self.dense_neurons = [
+        # np.prod(list(self.conv_output_shape)), int(input_data_points*self.compression_rate)]
 
         # Encoder
         self.conv1 = nn.Sequential(
@@ -56,20 +55,20 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[0]),
             nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[0],
-                out_channels=self.num_filters[0],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[0]),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[0],
-                out_channels=self.num_filters[0],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[0]),
-            nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[0],
+            #     out_channels=self.num_filters[0],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[0]),
+            # nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[0],
+            #     out_channels=self.num_filters[0],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[0]),
+            # nn.ReLU(),
         )
 
         self.conv2 = nn.Sequential(
@@ -80,20 +79,20 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[1]),
             nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[1],
-                out_channels=self.num_filters[1],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[1]),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[1],
-                out_channels=self.num_filters[1],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[1]),
-            nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[1],
+            #     out_channels=self.num_filters[1],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[1]),
+            # nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[1],
+            #     out_channels=self.num_filters[1],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[1]),
+            # nn.ReLU(),
         )
 
         self.conv3 = nn.Sequential(
@@ -104,20 +103,20 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[2]),
             nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[2],
-                out_channels=self.num_filters[2],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[2]),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=self.num_filters[2],
-                out_channels=self.num_filters[2],
-                kernel_size=3,
-                padding=1),
-            nn.BatchNorm3d(num_features=self.num_filters[2]),
-            nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[2],
+            #     out_channels=self.num_filters[2],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[2]),
+            # nn.ReLU(),
+            # nn.Conv3d(
+            #     in_channels=self.num_filters[2],
+            #     out_channels=self.num_filters[2],
+            #     kernel_size=3,
+            #     padding=1),
+            # nn.BatchNorm3d(num_features=self.num_filters[2]),
+            # nn.ReLU(),
         )
         # Pooling
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
@@ -147,24 +146,24 @@ class Model(nn.Module):
 
         # decoder layers
         self.t_conv1 = nn.Sequential(
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[2],
-                out_channels=self.num_filters[2],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[2]),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[2],
-                out_channels=self.num_filters[2],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[2]),
-            nn.ReLU(),
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[2],
+            #     out_channels=self.num_filters[2],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[2]),
+            # nn.ReLU(),
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[2],
+            #     out_channels=self.num_filters[2],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[2]),
+            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[2],
                 out_channels=self.num_filters[2],
@@ -177,6 +176,24 @@ class Model(nn.Module):
         )
 
         self.t_conv2 = nn.Sequential(
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[1],
+            #     out_channels=self.num_filters[1],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[1]),
+            # nn.ReLU(),
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[1],
+            #     out_channels=self.num_filters[1],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[1]),
+            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[1],
                 out_channels=self.num_filters[1],
@@ -185,46 +202,28 @@ class Model(nn.Module):
                 stride=1,
             ),
             nn.BatchNorm3d(num_features=self.num_filters[1]),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[1],
-                out_channels=self.num_filters[1],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[1]),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[1],
-                out_channels=self.num_filters[0],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[0]),
             nn.ReLU(),
         )
 
         self.t_conv3 = nn.Sequential(
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[0],
-                out_channels=self.num_filters[0],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[0]),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=self.num_filters[0],
-                out_channels=self.num_filters[0],
-                kernel_size=3,
-                padding=1,
-                stride=1,
-            ),
-            nn.BatchNorm3d(num_features=self.num_filters[0]),
-            nn.ReLU(),
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[0],
+            #     out_channels=self.num_filters[0],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[0]),
+            # nn.ReLU(),
+            # nn.ConvTranspose3d(
+            #     in_channels=self.num_filters[0],
+            #     out_channels=self.num_filters[0],
+            #     kernel_size=3,
+            #     padding=1,
+            #     stride=1,
+            # ),
+            # nn.BatchNorm3d(num_features=self.num_filters[0]),
+            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
                 out_channels=image_channels,
@@ -239,22 +238,22 @@ class Model(nn.Module):
         self.dropout = nn.Dropout(0.1)
 
         # Linear layers
-        self.encode_linear = nn.Sequential(
-            nn.Linear(
-                in_features=self.dense_neurons[0],
-                out_features=self.dense_neurons[1]
-            ),
-            nn.BatchNorm1d(self.dense_neurons[1]),
-            nn.ReLU(),
-        )
+        # self.encode_linear = nn.Sequential(
+        #     nn.Linear(
+        #         in_features=self.dense_neurons[0],
+        #         out_features=self.dense_neurons[1]
+        #     ),
+        #     nn.BatchNorm1d(self.dense_neurons[1]),
+        #     nn.ReLU(),
+        # )
 
-        self.decode_linear = nn.Sequential(
-            nn.Linear(
-                in_features=self.dense_neurons[1],
-                out_features=self.dense_neurons[0]
-            ),
-            nn.ReLU()
-        )
+        # self.decode_linear = nn.Sequential(
+        #     nn.Linear(
+        #         in_features=self.dense_neurons[1],
+        #         out_features=self.dense_neurons[0]
+        #     ),
+        #     nn.ReLU()
+        # )
 
     def encode(self, x):
         x = self.conv1(x)
@@ -286,22 +285,23 @@ class Model(nn.Module):
         return x
 
     def forward(self, x):
-        self.encoded = self.encode(x)
-        out = self.decode(self.encoded)
+
+        x = self.encode(x)
+        x = self.decode(x)
         # print("X: ", x.shape)
         # print("Xec: ", x_ec.shape)
         # print("Encode: ", self.encoded.shape)
         # print("out", out.shape)
-        assert out.shape == x.shape
-        return out
+        #assert out.shape == x.shape
+        return x
 
 
 if __name__ == "__main__":
-    test_name = "MoreConv"
+    test_name = "24_times_163264"
     x_dim = 32
     z_dim = 32
-    batch_size = 32
-    epochs = 3
+    batch_size = 16
+    epochs = 10
     learning_rate = 1e-3
     early_stop_count = 4
     dataset = weatherDataSet(x_range=[0, x_dim],
@@ -311,18 +311,18 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=0)
+                            num_workers=4)
     val_dataset = weatherDataSet(x_range=[0, x_dim],
                                  y_range=[0, x_dim],
                                  z_range=[0, z_dim],
                                  folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset,
-                                       batch_size=64,
+                                       batch_size=256,
                                        shuffle=True,
                                        num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(3, [z_dim, x_dim, x_dim])
-
+    print(model.parameters)
     trainer = trainer.Trainer(
         batch_size,
         learning_rate,
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         dataloaders,
         test_name
     )
-
+    summary(model, (3, z_dim, x_dim, x_dim))
     print(torch.cuda.is_available())
     train = True
     if train:
@@ -352,6 +352,19 @@ if __name__ == "__main__":
 
     data = data_sample.cpu().detach().numpy()
     reconstructed = reconstructed.cpu().detach().numpy()
+
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=50)
+    plt.savefig('plots/x_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=50)
+    plt.savefig('plots/y_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=50)
+    plt.savefig('plots/up_hist_norm.png')
+
+    data = weatherData.reconstruct_data(data, norm_params)
+    reconstructed = weatherData.reconstruct_data(reconstructed, norm_params)
     plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
     plt.savefig('plots/arrows.png')
     plotting.plot_histogram(

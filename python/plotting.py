@@ -4,26 +4,40 @@ import numpy as np
 import fileHandling
 
 
+def compute_rmses(original, decompressed):
+    n = np.prod(original.shape[1:])
+    error = np.sqrt(np.mean(
+        np.square(original.reshape(-1, n) - decompressed.reshape(-1, n)), axis=1))
+    return error
+
+
 def plot_histogram(original, decompressed, title="", bins=20):
     error = original - decompressed
+    rmse = compute_rmses(original, decompressed)
     plt.figure()
-    plt.subplot(1, 3, 1)
+    plt.subplot(1, 4, 1)
     plt.hist(original.flatten(), bins=bins)
     # plt.yticks([])
-    plt.xlim([0.1, 1.1])
+    #plt.xlim([0.1, 1.1])
     plt.xlabel('Original')
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 4, 2)
     plt.title(title)
     plt.hist(decompressed.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Decompressed')
-    plt.xlim([0, 1])
+    #plt.xlim([0, 1])
 
-    plt.subplot(1, 3, 3)
+    plt.subplot(1, 4, 3)
     plt.hist(error.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Error')
-    plt.xlim([-0.5, 0.5])
+    #plt.xlim([2, 2])
+
+    plt.subplot(1, 4, 4)
+    plt.hist(rmse.flatten(), bins=10)
+    # plt.yticks([])
+    plt.xlabel('RMSE')
+    #plt.xlim([5, 5])
 
 
 def plot_contour(original, decompressed, title=""):
@@ -80,11 +94,3 @@ def plot_arrows3D(original, compressed, num_arrows):
 
     ax.quiver(x, y, z, u2, v2, w2, color=('r'), length=0.8,
               normalize=False, label="Original")
-
-
-if __name__ == "__main__":
-    data = fileHandling.load_hdf5('data/calibration/2017_08_05.mat')
-    plot_contour(data['x_wind_ml'], data['y_wind_ml'])
-    plt.show(block=False)
-
-    input("Press key to exit")

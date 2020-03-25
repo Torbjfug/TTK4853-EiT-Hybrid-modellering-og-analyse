@@ -39,7 +39,7 @@ class Trainer:
         self.model = model
         # Transfer model to GPU VRAM, if possible.
         self.model = utils.to_cuda(self.model)
-        print(self.model)
+        # print(self.model)
 
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), learning_rate)

@@ -25,7 +25,7 @@ class weatherDataSet(Dataset):
             shape = (z_range[1]-z_range[0], y_range[1] -
                      y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
-            norm_params = {}
+            norm_params = np.empty((len(shape), 2))
             for i, key in enumerate(keys):
                 val = f[key][hour, z_range[0]:z_range[1], y_range[0]:y_range[1],
                              x_range[0]:x_range[1]]
@@ -33,7 +33,8 @@ class weatherDataSet(Dataset):
                 #              z_range[0]:z_range[1], time]
                 min_val = np.nanmin(val)
                 max_val = np.nanmax(val)
-                norm_params[key] = [min_val, max_val]
+                norm_params[i, 0] = min_val
+                norm_params[i, 1] = max_val
                 val = (val - min_val) / (max_val-min_val)
                 tensor_data[i, :, :, :] = torch.from_numpy(val)
                 if np.any(np.isnan(val)):
@@ -51,11 +52,21 @@ class weatherDataSet(Dataset):
         return data, norm_params
 
 
+def reconstruct_data(data, norm_params):
+    for i, norm_params_hour in enumerate(norm_params):
+        for j, params in enumerate(norm_params_hour):
+            max_val = params[1]
+            min_val = params[0]
+            data[i, j, :, :, :] *= float((max_val-min_val))
+            data[i, j, :, :, :] += float(min_val)
+    return data
+
+
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range=[10, 40], y_range=[10, 40], z_range=[
-        20, 30], folder='data/calibration/')
+    dataset = weatherDataSet(x_range=[10, 42], y_range=[10, 42], z_range=[
+        0, 32], folder='data/test1/')
 
     dataloader = DataLoader(dataset, batch_size=32,
                             shuffle=True, num_workers=0)
-    for i, batch in enumerate(dataloader):
-        print(i, batch.shape)
+    data_sample, norm_params = next(iter(dataloader))
+    reconstructed = reconstruct_data(data_sample, norm_params)
