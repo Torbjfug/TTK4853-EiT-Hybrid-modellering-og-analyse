@@ -9,15 +9,22 @@ import time
 
 
 class weatherDataSet(Dataset):
-    def __init__(self, x_range, y_range, z_range, folder):
-        self.x_range = x_range
-        self.y_range = y_range
-        self.z_range = z_range
+    def __init__(self, x_size, y_size, z_size, folder):
+        assert (x_size) % 2 == 0
+        assert (y_size) % 2 == 0
+        assert (z_size) % 2 == 0
+        self.x_size = x_size
+        self.y_size = y_size
+        self.z_size = z_size
         self.folder = folder
         self.filenames = [f for f in os.listdir(folder)
                           if f.endswith('.mat') and os.path.isfile(os.path.join(folder, f))]
+        self.x_quadrants = 128//x_size
+        self.y_quadrants = 128//y_size
+        self.z_quadrants = 32//z_size
+        self.qubes = self.x_quadrants*self.y_quadrants*self.z_quadrants
 
-    def load_file_tensor(self, filename, x_range=[0, 128], y_range=[0, 128], z_range=[0, 32], hour=0):
+    def load_file_tensor(self, filename, x_range, y_range, z_range, hour):
         with h5py.File(filename, 'r') as f:
 
             keys = list(f.keys())
@@ -25,7 +32,7 @@ class weatherDataSet(Dataset):
             shape = (z_range[1]-z_range[0], y_range[1] -
                      y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
-            norm_params = np.empty((len(shape), 2))
+            norm_params = np.empty((len(keys), 2))
             for i, key in enumerate(keys):
                 val = f[key][hour, z_range[0]:z_range[1], y_range[0]:y_range[1],
                              x_range[0]:x_range[1]]
@@ -43,12 +50,21 @@ class weatherDataSet(Dataset):
         return tensor_data, norm_params
 
     def __len__(self):
-        return len(self.filenames)*13
+        return len(self.filenames)*13*self.qubes
 
     def __getitem__(self, idx):
         hour = idx % 13
+        x_quadrant = (idx//13) % self.x_quadrants
+        y_quadrant = (idx//(13*self.x_quadrants)) % self.y_quadrants
+        z_quadrant = (idx//(13*self.x_quadrants *
+                            self.y_quadrants)) % self.z_quadrants
+        x_range = [self.x_size*x_quadrant,  self.x_size*(x_quadrant+1)]
+        y_range = [self.y_size*y_quadrant,  self.y_size*(y_quadrant+1)]
+        z_range = [self.z_size*z_quadrant,  self.z_size*(z_quadrant+1)]
+        filename = self.filenames[idx//(13*self.x_quadrants *
+                                        self.y_quadrants*self.z_quadrants)]
         data, norm_params = self.load_file_tensor(
-            self.folder + self.filenames[idx // 13], self.x_range, self.y_range, self.z_range, hour=hour)
+            self.folder + filename, x_range, y_range, z_range, hour)
         return data, norm_params
 
 
@@ -63,8 +79,8 @@ def reconstruct_data(data, norm_params):
 
 
 if __name__ == "__main__":
-    dataset = weatherDataSet(x_range=[10, 42], y_range=[10, 42], z_range=[
-        0, 32], folder='data/test1/')
+    dataset = weatherDataSet(x_size=32, y_size=32,
+                             z_size=32, folder='data/train/')
 
     dataloader = DataLoader(dataset, batch_size=32,
                             shuffle=True, num_workers=0)

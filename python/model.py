@@ -299,22 +299,23 @@ class Model(nn.Module):
 if __name__ == "__main__":
     test_name = "24_times_163264"
     x_dim = 32
+    y_dim = 32
     z_dim = 32
     batch_size = 16
     epochs = 10
     learning_rate = 1e-3
     early_stop_count = 4
-    dataset = weatherDataSet(x_range=[0, x_dim],
-                             y_range=[0, x_dim],
-                             z_range=[0, z_dim],
+    dataset = weatherDataSet(x_size=x_dim,
+                             y_size=y_dim,
+                             z_size=z_dim,
                              folder='data/train/')
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=4)
-    val_dataset = weatherDataSet(x_range=[0, x_dim],
-                                 y_range=[0, x_dim],
-                                 z_range=[0, z_dim],
+    val_dataset = weatherDataSet(x_size=x_dim,
+                                 y_size=y_dim,
+                                 z_size=z_dim,
                                  folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=256,
@@ -322,7 +323,6 @@ if __name__ == "__main__":
                                        num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(3, [z_dim, x_dim, x_dim])
-    print(model.parameters)
     trainer = trainer.Trainer(
         batch_size,
         learning_rate,
@@ -332,7 +332,7 @@ if __name__ == "__main__":
         dataloaders,
         test_name
     )
-    summary(model, (3, z_dim, x_dim, x_dim))
+    summary(model, (4, z_dim, x_dim, x_dim))
     print(torch.cuda.is_available())
     train = True
     if train:
