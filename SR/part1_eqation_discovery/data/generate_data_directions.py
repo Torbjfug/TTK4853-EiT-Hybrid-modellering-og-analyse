@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from Interpolering import interpolation
+#dx = 221
 dx = 221
 dy = 221
 dz = 55
@@ -92,9 +93,9 @@ data = load_hdf5('../TTK4853-EiT-Hybrid-modellering-og-analyse/SR/data/validatio
 
 h_start = 0 #Houre
 h_end = 1
-i_min = 0; i_max = 120
-j_min = 0; j_max = 120
-k_min = 0; k_max = 39 
+i_min = 0; i_max = 133
+j_min = 0; j_max = 133
+k_min = 0; k_max = 40 
 
 #geo = pd.DataFrame(columns=['geo'])
 #for i in range(100):
@@ -107,118 +108,201 @@ k_min = 0; k_max = 39
 
 names = list(['u', 'ux','uy','uz','u2x','u2y','u2z','uux','vuy','wuz','p','px',])
 
-
-x = np.linspace(0,120, 120)
-print(x)
-y = np.linspace(0,120, 120)
-X, Y = np.meshgrid(x, y)
-Z1 = np.zeros((120,120))
-print(data['geopotential_height_ml'][0,:,1,1])
-for i in range(120):
-    for j in range(120):
-        Z1[i,j] = data['geopotential_height_ml'][0,39,j,i]
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-ax.contour3D(X, Y, Z1, 50, cmap='binary')
-#plt.show()
-Z3 = np.zeros((120,120))
-for i in range(120):
-    for j in range(120):
-        Z3[i,j] = data['x_wind_ml'][0,39,j,i]
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-ax.contour3D(X, Y, Z3, 50, cmap='binary')
-
-#names = list(['u', 'ux','uy','u2x','u2y','p','px',])
 for h in range(h_start, h_end):
     print('h = ', h)
     for x in range(i_min, i_max):
         for y in range(j_min, j_max):
-            data['x_wind_ml'][h,k_min:k_max,y,x], data['y_wind_ml'][h,k_min:k_max,y,x], data['upward_air_velocity_ml'][h,k_min:k_max,y,x], data['air_pressure_ml'][h,k_min:k_max,y,x] \
+            data['x_wind_ml'][h,k_min:k_max,y,x],\
+                data['y_wind_ml'][h,k_min:k_max,y,x],\
+                data['upward_air_velocity_ml'][h,k_min:k_max,y,x],\
+                data['air_pressure_ml'][h,k_min:k_max,y,x]\
                 = interpolation(k_max-k_min,data['geopotential_height_ml'][h,k_min:k_max,y,x],\
                     data['x_wind_ml'][h,k_min:k_max,y,x],\
                     data['y_wind_ml'][h,k_min:k_max,y,x],\
                     data['upward_air_velocity_ml'][h,k_min:k_max,y,x],\
                     data['air_pressure_ml'][h,k_min:k_max,y,x])
 
-Z2 = np.zeros((120,120))
-for i in range(120):
-    for j in range(120):
-        Z2[i,j] = data['air_pressure_ml'][0,2,j,i]
+
+i_min = 20; i_max = 100
+j_min = 20; j_max = 100
+k_min = 0; k_max = 40 
+
+i_min += 1; i_max -= 1
+j_min += 1; j_max -= 1
+k_min += 1; k_max -= 1
+
+_ux = ux(data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+
+Z2 = np.zeros((48,48))
+
+x = np.linspace(0,48, 48)
+y = np.linspace(0,48, 48)
+X, Y = np.meshgrid(x, y)
+
+#for i in range(48):
+#    for j in range(48):
+#        Z2[i,j] = data['x_wind_ml'][0,20,j,i]
+#fig = plt.figure()
+#ax = plt.axes(projection='3d')
+#ax.contour3D(X, Y, Z2, 50, cmap='binary')
+
+
+
+
+
+
+_uy = ux(data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+
+_uz = ux(data['x_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_u2x = u2x(data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+for i in range(48):
+    for j in range(48):
+        Z2[i,j] = _u2x[0,20,j,i]
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-ax.contour3D(X, Y, Z2, 50, cmap='binary')
+ax.contour3D(X, Y, Z2, 50, cmap='binary')   
 plt.show()
 
-derivatives = pd.DataFrame(columns=names)
-for h in range(h_start, h_end):
-    print('h = ',h)
-    for k in range(k_min,k_max):
-        print('k = ',k)
-        for x in range(i_min,i_max):
-            for y in range(j_min,j_max):
-                current_derivatives = pd.DataFrame([[data['x_wind_ml'][h,k,y,x], \
-                    ux(data['x_wind_ml'][h,k,y,x+1],data['x_wind_ml'][h,k,y,x-1]),\
-                    uy(data['x_wind_ml'][h,k,y+1,x],data['x_wind_ml'][h,k,y-1,x]),\
-                    uz(data['x_wind_ml'][h,k+1,y,x],data['x_wind_ml'][h,k-1,y,x]),\
-                    u2x(data['x_wind_ml'][h,k,y,x+1],data['x_wind_ml'][h,k,y,x],data['x_wind_ml'][h,k,y,x-1]),\
-                    u2y(data['x_wind_ml'][h,k,y+1,x],data['x_wind_ml'][h,k,y,x],data['x_wind_ml'][h,k,y-1,x]),\
-                    u2z(data['x_wind_ml'][h,k+1,y,x],data['x_wind_ml'][h,k,y,x],data['x_wind_ml'][h,k-1,y,x]),\
-                    data['x_wind_ml'][h,k,y,x]*ux(data['x_wind_ml'][h,k,y,x+1],data['x_wind_ml'][h,k,y,x-1]),\
-                    data['y_wind_ml'][h,k,y,x]*uy(data['x_wind_ml'][h,k,y+1,x],data['x_wind_ml'][h,k,y-1,x]),\
-                    data['upward_air_velocity_ml'][h,k,y,x]*uz(data['x_wind_ml'][h,k+1,y,x],data['x_wind_ml'][h,k-1,y,x]),\
-                    data['air_pressure_ml'][h,k,y,x],\
-                    px(data['air_pressure_ml'][h,k,y,x+1],data['air_pressure_ml'][h,k,y,x-1])\
-                    ]],columns=names)
-                derivatives = derivatives.append(current_derivatives)
+
+_u2y = u2x(data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_u2z = u2x(data['x_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['x_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_uux = data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_ux
+
+_vuy = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_uy
+
+_wuz = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_uz
+
+_px = px(data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+_ux = pd.DataFrame(np.reshape(_ux,(-1,1)), columns=list(['ux']))
+_uy = pd.DataFrame(np.reshape(_uy, (-1,1)), columns=list(['uy']))
+_uz = pd.DataFrame(np.reshape(_uz, (-1,1)), columns=list(['uz']))
+_u2x = pd.DataFrame(np.reshape(_u2x, (-1,1)), columns=list(['u2x']))
+_u2y = pd.DataFrame(np.reshape(_u2y, (-1,1)), columns=list(['u2y']))
+_u2z = pd.DataFrame(np.reshape(_u2z, (-1,1)), columns=list(['u2z']))
+_uux = pd.DataFrame(np.reshape(_uux, (-1,1)), columns=list(['uux']))
+_vuy = pd.DataFrame(np.reshape(_vuy, (-1,1)), columns=list(['vuy']))
+_wuz = pd.DataFrame(np.reshape(_wuz, (-1,1)), columns=list(['wuz']))
+_px = pd.DataFrame(np.reshape(_px,(-1,1)), columns=list(['px']))
 
 
+derivatives = pd.concat([_u2x, _u2y, _u2z, _uux, _vuy, _wuz, _px], axis=1)
 derivatives.to_csv('navier_stokes_data_u.csv',index=False)
 print("X done")
-derivatives = pd.DataFrame(columns=names)
-names = list(['v','vx','vy','vz','v2x','v2y','v2z','p','py',])
-for i in range(i_min,i_max):
-    for j in range(j_min,j_max):
-        for k in range(k_min,k_max):
-            current_derivatives = pd.DataFrame([[\
-                data['y_wind_ml'][i,j,k,h], \
-                vx(data['y_wind_ml'][i+1,j,k,h],data['y_wind_ml'][i-1,j,k,h]),\
-                vy(data['y_wind_ml'][i,j+1,k,h],data['y_wind_ml'][i,j-1,k,h]),\
-                vz(data['y_wind_ml'][i,j,k+1,h],data['y_wind_ml'][i,j,k-1,h]),\
-                v2x(data['y_wind_ml'][i+1,j,k,h],data['y_wind_ml'][i,j,k,h],data['y_wind_ml'][i-1,j,k,h]),\
-                v2y(data['y_wind_ml'][i,j+1,k,h],data['y_wind_ml'][i,j,k,h],data['y_wind_ml'][i,j-1,k,h]),\
-                v2z(data['y_wind_ml'][i,j,k+1,h],data['y_wind_ml'][i,j,k,h],data['y_wind_ml'][i,j,k-1,h]),\
-                data['air_pressure_ml'][i,j,k,h],\
-                py(data['air_pressure_ml'][i,j+1,k,h],data['air_pressure_ml'][i,j-1,k,h]),\
-                ]], columns=names)
-            derivatives = derivatives.append(current_derivatives)
-derivatives['vvx'] = derivatives['v']*derivatives['vx']
-derivatives['vvy'] = derivatives['v']*derivatives['vy']
-derivatives['vvz'] = derivatives['v']*derivatives['vz']
 
+
+#############################################################################
+#############################################################################
+
+_vx = vx(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+_vy = vx(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_vy = vx(data['y_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_v2x = v2x(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+_v2y = v2x(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_v2z = v2x(data['y_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['y_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_vvx = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vx
+
+_vvy = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vy
+
+_vvz = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vz
+
+_py = py(data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_vx = pd.DataFrame(np.reshape(_vx,(-1,1)), columns=list(['vx']))
+_vy = pd.DataFrame(np.reshape(_vy, (-1,1)), columns=list(['vy']))
+_vz = pd.DataFrame(np.reshape(_vz, (-1,1)), columns=list(['vz']))
+_v2x = pd.DataFrame(np.reshape(_v2x, (-1,1)), columns=list(['v2x']))
+_v2y = pd.DataFrame(np.reshape(_v2y, (-1,1)), columns=list(['v2y']))
+_v2z = pd.DataFrame(np.reshape(_v2z, (-1,1)), columns=list(['v2z']))
+_vvx = pd.DataFrame(np.reshape(_vvx, (-1,1)), columns=list(['vvx']))
+_vvy = pd.DataFrame(np.reshape(_vvy, (-1,1)), columns=list(['vvy']))
+_vvz = pd.DataFrame(np.reshape(_vvz, (-1,1)), columns=list(['vvz']))
+
+#_p = pd.DataFrame(_ux, columns=list('p'))
+_py = pd.DataFrame(np.reshape(_py,(-1,1)), columns=list(['py']))
+
+derivatives = pd.concat([_vx, _vy, _vz, _v2x, _v2y, _v2z, _vvx, _vvy, _vvz, _py], axis=1)
 derivatives.to_csv('navier_stokes_data_v.csv',index=False)
 print("Y done")
-derivatives = pd.DataFrame(columns=names)
-names = list(['w','wx','wy','wz','w2x','w2y','w2z','p','pz'])
-for i in range(i_min,i_max):
-    for j in range(j_min,j_max):
-        for k in range(k_min,k_max):
-            current_derivatives = pd.DataFrame([[
-                data['upward_air_velocity_ml'][i,j,k,h], \
-                wx(data['upward_air_velocity_ml'][i+1,j,k,h],data['upward_air_velocity_ml'][i-1,j,k,h]),\
-                wy(data['upward_air_velocity_ml'][i,j+1,k,h],data['upward_air_velocity_ml'][i,j-1,k,h]),\
-                wz(data['upward_air_velocity_ml'][i,j,k+1,h],data['upward_air_velocity_ml'][i,j,k-1,h]),\
-                w2x(data['upward_air_velocity_ml'][i+1,j,k,h],data['upward_air_velocity_ml'][i,j,k,h],data['upward_air_velocity_ml'][i-1,j,k,h]),\
-                w2y(data['upward_air_velocity_ml'][i,j+1,k,h],data['upward_air_velocity_ml'][i,j,k,h],data['upward_air_velocity_ml'][i,j-1,k,h]),\
-                w2z(data['upward_air_velocity_ml'][i,j,k+1,h],data['upward_air_velocity_ml'][i,j,k,h],data['upward_air_velocity_ml'][i,j,k-1,h]),\
-                data['air_pressure_ml'][i,j,k,h],\
-                pz(data['air_pressure_ml'][i,j,k+1,h],data['air_pressure_ml'][i,j,k-1,h])]], columns=names)
-            derivatives = derivatives.append(current_derivatives)
 
-derivatives['wwx'] = derivatives['w']*derivatives['wx']
-derivatives['wwy'] = derivatives['w']*derivatives['wy']
-derivatives['wwz'] = derivatives['w']*derivatives['wz']
-print("Z done")
+#############################################################################
+#############################################################################
 
+_wx = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
 
+_wy = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_wy = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_w2x = w2x(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min-1:i_max-1])
+
+_w2y = w2x(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_w2z = w2x(data['upward_air_velocity_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
+    data['upward_air_velocity_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
+
+_wwx = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wx
+
+_wy = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wy
+
+_wwz = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wz
+
+_pz = pz(data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
+    data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
+
+_wx = pd.DataFrame(np.reshape(_wx,(-1,1)), columns=list(['wx']))
+_wy = pd.DataFrame(np.reshape(_wy, (-1,1)), columns=list(['wy']))
+_wz = pd.DataFrame(np.reshape(_wz, (-1,1)), columns=list(['wz']))
+_w2x = pd.DataFrame(np.reshape(_w2x, (-1,1)), columns=list(['w2x']))
+_v2y = pd.DataFrame(np.reshape(_w2y, (-1,1)), columns=list(['w2y']))
+_w2z = pd.DataFrame(np.reshape(_w2z, (-1,1)), columns=list(['w2z']))
+_wwx = pd.DataFrame(np.reshape(_wwx, (-1,1)), columns=list(['wwx']))
+_wwy = pd.DataFrame(np.reshape(_wwy, (-1,1)), columns=list(['wwy']))
+_wwz = pd.DataFrame(np.reshape(_wwz, (-1,1)), columns=list(['wvz']))
+
+#_p = pd.DataFrame(_ux, columns=list('p'))
+_px = pd.DataFrame(np.reshape(_py,(-1,1)), columns=list(['pz']))
+
+derivatives = pd.concat([_wx, _wy, _wz, _w2x, _w2y, _w2z, _wwx, _wwy, _wwz, _pz], axis=1)
 derivatives.to_csv('navier_stokes_data_w.csv',index=False)
+print("W done")

@@ -7,7 +7,6 @@ import numpy as np
 
 def interpolation(grid, geopotential, wind_x, wind_y, wind_z, pressure):
     #grid er antall nye z-koordinater
-
     new_wind_x = [0 for i in range(grid)]
     new_wind_y = [0 for i in range(grid)]
     new_wind_z = [0 for i in range(grid)]
@@ -48,6 +47,4 @@ def interpolation(grid, geopotential, wind_x, wind_y, wind_z, pressure):
             new_wind_y[i] = wind_y[gp_below] + weight*(wind_y[gp_above] - wind_y[gp_below])
             new_wind_z[i] = wind_z[gp_below] + weight*(wind_z[gp_above] - wind_z[gp_below])
             new_pressure[i] = pressure[gp_below] + weight*(pressure[gp_above] - pressure[gp_below])
-
-
     return new_wind_x, new_wind_y, new_wind_z, new_pressure  

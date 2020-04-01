@@ -158,14 +158,14 @@ if(y):
 if(z):
     pset = gep.PrimitiveSet('Main', input_names=['w','wx','w2x','wy','w2y','wz','w2z','uwx','vwy','wwz','p'])
 
-h         = 8          # head length t = h(n-1) + 1
+h         = 20          # head length t = h(n-1) + 1
 n_genes   = 1        # number of genes in a chromosome
-r         = 30          # length of the RNC array
+r         = 50          # length of the RNC array
 enable_ls = True # whether to apply the linear scaling technique
 
 # size of population and number of generations
 n_pop   = 20
-n_gen   = 100
+n_gen   = 500
 champs  = 3
 
 def protected_div(x1, x2):
