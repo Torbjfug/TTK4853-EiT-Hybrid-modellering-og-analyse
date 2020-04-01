@@ -87,7 +87,10 @@ pz = lambda pk_pluss, pk_minus : (pk_pluss-pk_minus)/2/dz
 # For windows:
 #data = load_hdf5('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\data\\validation\\2019_05_05.mat')
 # For linux:
-data = load_hdf5('../TTK4853-EiT-Hybrid-modellering-og-analyse/SR/data/validation/2019_05_05.mat')
+if(platform.system() == 'Windows'): #Windows
+    data = load_hdf5('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\data\\validation/2019_05_05.mat')
+else:
+    data = load_hdf5('./TTK4853-EiT-Hybrid-modellering-og-analyse/SR/data/validation/2019_05_05.mat')
 #Keys: ['air_potential_temperature_ml', 'air_pressure_ml', 'turbulence_dissipation_ml',
 #       'turbulence_index_ml', 'upward_air_velocity_ml', 'x_wind_ml', 'y_wind_ml']
 

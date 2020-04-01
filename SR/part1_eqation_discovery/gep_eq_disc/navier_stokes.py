@@ -16,17 +16,20 @@ import datetime
 
 import os
 import pandas as pd
+import platform
 
 x = True
 y = False
 z = False
 
-
-#doublecheck the data is there
-print(os.listdir("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data"))
-
-# read in the data to pandas
-navier_data = pd.read_csv("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')      
+if(platform.system() == 'Windows'): #Windows
+    #doublecheck the data is there
+    print(os.listdir("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data"))
+    # read in the data to pandas
+    navier_data = pd.read_csv("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')
+else:
+    print(os.listdir("./TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data"))
+    navier_data = pd.read_csv("./TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data/navier_stokes_data_u.csv",  encoding='utf-8')
 # In[46]:
 
 
