@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
 #SBATCH --account=ie-itk
-#SBATCH --time=00:30:00
+#SBATCH --time=00:50:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=12000
@@ -25,6 +25,6 @@ module purge
 module load intel/2018b 
 module load Python/3.6.6
 source /home/gustavoo/datasci/bin/activate
-python /home/gustavoo/geppy/setup.py install
-python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/generate_data_directions.py
+cd /home/gustavoo/geppy
+python setup.py install
 python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/gep_eq_disc/navier_stokes.py
