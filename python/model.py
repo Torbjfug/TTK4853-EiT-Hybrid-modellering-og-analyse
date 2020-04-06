@@ -36,7 +36,7 @@ class Model(nn.Module):
                  input_dimentions):
 
         super().__init__()
-        self.num_filters = [16, 32, 64]
+        self.num_filters = [32, 32, 16]
         self.encoded = None
         cov_layers = len(self.num_filters)
         input_data_points = image_channels*np.prod(input_dimentions)
@@ -231,11 +231,12 @@ class Model(nn.Module):
                 padding=1,
                 stride=1,
             ),
+            nn.LeakyReLU(),
         )
 
         self.pool_indecies = [(), (), ()]
         self.activation = nn.ReLU()
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0)
 
         # Linear layers
         # self.encode_linear = nn.Sequential(
@@ -296,15 +297,27 @@ class Model(nn.Module):
         return x
 
 
+def evaluate_performance(output, original):
+
+    # n = np.prod(output.shape[2:])
+    # mse_errors = np.sqrt(np.mean(
+    #     np.square(output.reshape(-1, 4, n) - original.reshape(-1, 4, n)), axis=1))
+    # max_errors = np.max(output.reshape(-1,4, n) - original.reshape(-1, 4, n), axis=1)
+
+    print(mse_errors)
+    print(max_errors)
+
+
 if __name__ == "__main__":
-    test_name = "24_times_163264"
+    test_name = "323216"
     x_dim = 32
     y_dim = 32
     z_dim = 32
-    batch_size = 16
-    epochs = 10
-    learning_rate = 1e-3
+    batch_size = 32
+    epochs = 1
+    learning_rate = 1e-4
     early_stop_count = 4
+    max_steps = 20000
     dataset = weatherDataSet(x_size=x_dim,
                              y_size=y_dim,
                              z_size=z_dim,
@@ -312,27 +325,28 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=4)
-    val_dataset = weatherDataSet(x_size=x_dim,
-                                 y_size=y_dim,
-                                 z_size=z_dim,
+                            num_workers=0)
+    val_dataset = weatherDataSet(x_size=128,
+                                 y_size=128,
+                                 z_size=32,
                                  folder='data/validation/')
     validation_dataloader = DataLoader(val_dataset,
-                                       batch_size=256,
+                                       batch_size=32,
                                        shuffle=True,
                                        num_workers=4)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
-    model = Model(3, [z_dim, x_dim, x_dim])
+    model = Model(4, [z_dim, x_dim, x_dim])
     trainer = trainer.Trainer(
         batch_size,
         learning_rate,
         early_stop_count,
         epochs,
+        max_steps,
         model,
         dataloaders,
         test_name
     )
-    summary(model, (4, z_dim, x_dim, x_dim))
+    summary(model, (4, z_dim, y_dim, x_dim))
     print(torch.cuda.is_available())
     train = True
     if train:
@@ -346,7 +360,8 @@ if __name__ == "__main__":
     data_sample = utils.to_cuda(data_sample)
     # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
     trainer.model.eval()
-    reconstructed = model(data_sample)
+    with torch.no_grad():
+        reconstructed = trainer.model(data_sample)
 
     print(data_sample.shape)
 
@@ -354,29 +369,39 @@ if __name__ == "__main__":
     reconstructed = reconstructed.cpu().detach().numpy()
 
     plotting.plot_histogram(
-        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=50)
+        data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='x', bins=100)
     plt.savefig('plots/x_hist_norm.png')
     plotting.plot_histogram(
-        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=50)
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='y', bins=100)
     plt.savefig('plots/y_hist_norm.png')
     plotting.plot_histogram(
-        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=50)
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
     plt.savefig('plots/up_hist_norm.png')
+
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
+    plt.savefig('plots/preasure_hist_norm.png')
 
     data = weatherData.reconstruct_data(data, norm_params)
     reconstructed = weatherData.reconstruct_data(reconstructed, norm_params)
+
     plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
     plt.savefig('plots/arrows.png')
     plotting.plot_histogram(
-        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='x', bins=50)
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='x', bins=100)
     plt.savefig('plots/x_hist.png')
     plotting.plot_histogram(
-        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='y', bins=50)
+        data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='y', bins=100)
     plt.savefig('plots/y_hist.png')
     plotting.plot_histogram(
-        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='up', bins=50)
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
     plt.savefig('plots/up_hist.png')
+
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
+    plt.savefig('plots/preasure_hist.png')
     plotting.plot_contour(data, reconstructed, title='x')
     plt.savefig('plots/contour_hist.png')
     plt.show(block=False)
+
     input("Press key to exit")

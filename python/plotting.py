@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import fileHandling
 
@@ -11,33 +12,48 @@ def compute_rmses(original, decompressed):
     return error
 
 
+def compute_relative_error(original, decompressed):
+    n = np.prod(original.shape[1:])
+    difference = original.reshape(-1, n) - decompressed.reshape(-1, n)
+    error = np.divide(np.abs(difference), np.abs(original.reshape(-1, n))+0.1)
+    return error
+
+
 def plot_histogram(original, decompressed, title="", bins=20):
     error = original - decompressed
     rmse = compute_rmses(original, decompressed)
-    plt.figure()
-    plt.subplot(1, 4, 1)
+    relative_error = compute_relative_error(original, decompressed)
+    plt.figure(figsize=(20, 20))
+    plt.subplot(1, 5, 1)
     plt.hist(original.flatten(), bins=bins)
     # plt.yticks([])
     #plt.xlim([0.1, 1.1])
     plt.xlabel('Original')
-    plt.subplot(1, 4, 2)
+    plt.subplot(1, 5, 2)
     plt.title(title)
     plt.hist(decompressed.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Decompressed')
     #plt.xlim([0, 1])
 
-    plt.subplot(1, 4, 3)
+    plt.subplot(1, 5, 3)
     plt.hist(error.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Error')
     #plt.xlim([2, 2])
 
-    plt.subplot(1, 4, 4)
+    plt.subplot(1, 5, 4)
     plt.hist(rmse.flatten(), bins=10)
     # plt.yticks([])
     plt.xlabel('RMSE')
     #plt.xlim([5, 5])
+    # print("relative_error")
+    # print(relative_error.flatten().shape)
+    plt.subplot(1, 5, 5)
+    plt.hist(relative_error.flatten(), bins=bins)
+    # plt.yticks([])
+    plt.xlabel('Relative error')
+    plt.xlim([0, 1])
 
 
 def plot_contour(original, decompressed, title=""):
@@ -78,13 +94,13 @@ def plot_arrows3D(original, compressed, num_arrows):
                           y_range,
                           z_range)
 
-    u = compressed[0, x_range, y_range, z_range]
-    v = compressed[1, x_range, y_range, z_range]
-    w = compressed[2, x_range, y_range, z_range]
+    u = compressed[2, x_range, y_range, z_range]
+    v = compressed[3, x_range, y_range, z_range]
+    w = compressed[1, x_range, y_range, z_range]
 
-    u2 = original[0, x_range, y_range, z_range]
-    v2 = original[1, x_range, y_range, z_range]
-    w2 = original[2, x_range, y_range, z_range]
+    u2 = original[2, x_range, y_range, z_range]
+    v2 = original[3, x_range, y_range, z_range]
+    w2 = original[1, x_range, y_range, z_range]
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')

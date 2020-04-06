@@ -1,11 +1,10 @@
 from torch.utils.data import Dataset
 import os
-from fileHandling import load_hdf5
+from python.fileHandling import load_hdf5
 import h5py
 import numpy as np
 from torch.utils.data import DataLoader
 import torch
-import time
 
 
 class weatherDataSet(Dataset):
@@ -25,10 +24,12 @@ class weatherDataSet(Dataset):
         self.qubes = self.x_quadrants*self.y_quadrants*self.z_quadrants
 
     def load_file_tensor(self, filename, x_range, y_range, z_range, hour):
+        # print(filename)
         with h5py.File(filename, 'r') as f:
 
             keys = list(f.keys())
-
+            if 'geopotential_height_ml' in keys:
+                keys.remove('geopotential_height_ml')
             shape = (z_range[1]-z_range[0], y_range[1] -
                      y_range[0], x_range[1]-x_range[0])
             tensor_data = torch.empty((len(keys),) + shape)
