@@ -96,7 +96,7 @@ else:
 #       'turbulence_index_ml', 'upward_air_velocity_ml', 'x_wind_ml', 'y_wind_ml']
 
 h_start = 0 #Houre
-h_end = 1
+h_end = 11
 i_min = 0; i_max = 133
 j_min = 0; j_max = 133
 k_min = 0; k_max = 40 

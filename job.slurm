@@ -2,10 +2,10 @@
 #SBATCH --partition=CPUQ
 #SBATCH --account=ie-itk
 #SBATCH --time=00:5:00
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=12000
-#SBATCH --job-name="EiT hybrid modelling and analyseis"
+#SBATCH --job-name="EiT hybrid modelling and analysis"
 #SBATCH --output=test-srun.out
 #SBATCH --mail-user=gustavoo@stud.ntnu.no
 #SBATCH --mail-type=ALL
@@ -21,4 +21,10 @@ echo "We are using $SLURM_CPUS_ON_NODE cores"
 echo "We are using $SLURM_CPUS_ON_NODE cores per node"
 echo "Total of $SLURM_NTASKS cores"
 
-python ./TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data/generate_data_directions.py
+module intel/2018b 
+module python/3.6.6
+source datasci/bin/activate
+
+python /home/gustavoo/geppy/setup.py install 
+python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/generate_data_directions.py
+python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/gep_eq_disc/navier_stokes.py

@@ -169,7 +169,7 @@ r         = 50          # length of the RNC array
 enable_ls = True # whether to apply the linear scaling technique
 
 # size of population and number of generations
-n_pop   = 20
+n_pop   = 50
 n_gen   = 500
 champs  = 3
 
