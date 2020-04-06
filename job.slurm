@@ -21,8 +21,8 @@ echo "We are using $SLURM_CPUS_ON_NODE cores"
 echo "We are using $SLURM_CPUS_ON_NODE cores per node"
 echo "Total of $SLURM_NTASKS cores"
 
-module intel/2018b 
-module python/3.6.6
+module load intel/2018b 
+module load python/3.6.6
 source datasci/bin/activate
 
 python /home/gustavoo/geppy/setup.py install 
