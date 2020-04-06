@@ -91,7 +91,7 @@ pz = lambda pk_pluss, pk_minus : (pk_pluss-pk_minus)/2/dz
 if(platform.system() == 'Windows'): #Windows
     data = load_hdf5('..\TTK4853-Eit-Hybrid-modellering-og-analyse\SR\data\\validation/2019_05_05.mat')
 else:
-    data = load_hdf5('/lustre1/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/data/validation/2019_05_05.mat')
+    data = load_hdf5('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/data/validation/2019_05_05.mat')
 #Keys: ['air_potential_temperature_ml', 'air_pressure_ml', 'turbulence_dissipation_ml',
 #       'turbulence_index_ml', 'upward_air_velocity_ml', 'x_wind_ml', 'y_wind_ml']
 
@@ -152,11 +152,6 @@ X, Y = np.meshgrid(x, y)
 #ax = plt.axes(projection='3d')
 #ax.contour3D(X, Y, Z2, 50, cmap='binary')
 
-
-
-
-
-
 _uy = ux(data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
     data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
 
@@ -207,7 +202,10 @@ _px = pd.DataFrame(np.reshape(_px,(-1,1)), columns=list(['px']))
 
 
 derivatives = pd.concat([_u2x, _u2y, _u2z, _uux, _vuy, _wuz, _px], axis=1)
-derivatives.to_csv('navier_stokes_data_u.csv',index=False)
+if(platform.system() == 'Windows'): #Windows
+    derivatives.to_csv('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\navier_stokes_data_u.csv',index=False)
+else: 
+    derivatives.to_csv('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/navier_stokes_data_u.csv',index=False)
 print("X done")
 
 
@@ -220,7 +218,7 @@ _vx = vx(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1
 _vy = vx(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
     data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
 
-_vy = vx(data['y_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+_vz = vx(data['y_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
     data['y_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
 
 _v2x = v2x(data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
@@ -235,11 +233,11 @@ _v2z = v2x(data['y_wind_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_m
     data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
     data['y_wind_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
 
-_vvx = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vx
+_uvx = data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vx
 
 _vvy = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vy
 
-_vvz = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vz
+_wvz = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_vz
 
 _py = py(data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
     data['air_pressure_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
@@ -250,15 +248,18 @@ _vz = pd.DataFrame(np.reshape(_vz, (-1,1)), columns=list(['vz']))
 _v2x = pd.DataFrame(np.reshape(_v2x, (-1,1)), columns=list(['v2x']))
 _v2y = pd.DataFrame(np.reshape(_v2y, (-1,1)), columns=list(['v2y']))
 _v2z = pd.DataFrame(np.reshape(_v2z, (-1,1)), columns=list(['v2z']))
-_vvx = pd.DataFrame(np.reshape(_vvx, (-1,1)), columns=list(['vvx']))
+_uvx = pd.DataFrame(np.reshape(_uvx, (-1,1)), columns=list(['uvx']))
 _vvy = pd.DataFrame(np.reshape(_vvy, (-1,1)), columns=list(['vvy']))
-_vvz = pd.DataFrame(np.reshape(_vvz, (-1,1)), columns=list(['vvz']))
+_wvz = pd.DataFrame(np.reshape(_wvz, (-1,1)), columns=list(['wvz']))
 
 #_p = pd.DataFrame(_ux, columns=list('p'))
 _py = pd.DataFrame(np.reshape(_py,(-1,1)), columns=list(['py']))
 
-derivatives = pd.concat([_vx, _vy, _vz, _v2x, _v2y, _v2z, _vvx, _vvy, _vvz, _py], axis=1)
-derivatives.to_csv('navier_stokes_data_v.csv',index=False)
+derivatives = pd.concat([_vx, _vy, _vz, _v2x, _v2y, _v2z, _uvx, _vvy, _wvz, _py], axis=1)
+if(platform.system() == 'Windows'): #Windows
+    derivatives.to_csv('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\navier_stokes_data_v.csv',index=False)
+else: 
+    derivatives.to_csv('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/navier_stokes_data_v.csv',index=False)
 print("Y done")
 
 #############################################################################
@@ -270,7 +271,7 @@ _wx = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_
 _wy = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min+1:j_max+1,i_min:i_max],\
     data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min-1:j_max-1,i_min:i_max])
 
-_wy = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
+_wz = wx(data['upward_air_velocity_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_max,i_min:i_max],\
     data['upward_air_velocity_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
 
 _w2x = w2x(data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min+1:i_max+1],\
@@ -285,9 +286,9 @@ _w2z = w2x(data['upward_air_velocity_ml'][h_start:h_end,k_min+1:k_max+1,j_min:j_
     data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max],\
     data['upward_air_velocity_ml'][h_start:h_end,k_min-1:k_max-1,j_min:j_max,i_min:i_max])
 
-_wwx = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wx
+_uwx = data['x_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wx
 
-_wy = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wy
+_vwy = data['y_wind_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wy
 
 _wwz = data['upward_air_velocity_ml'][h_start:h_end,k_min:k_max,j_min:j_max,i_min:i_max]*_wz
 
@@ -298,15 +299,18 @@ _wx = pd.DataFrame(np.reshape(_wx,(-1,1)), columns=list(['wx']))
 _wy = pd.DataFrame(np.reshape(_wy, (-1,1)), columns=list(['wy']))
 _wz = pd.DataFrame(np.reshape(_wz, (-1,1)), columns=list(['wz']))
 _w2x = pd.DataFrame(np.reshape(_w2x, (-1,1)), columns=list(['w2x']))
-_v2y = pd.DataFrame(np.reshape(_w2y, (-1,1)), columns=list(['w2y']))
+_w2y = pd.DataFrame(np.reshape(_w2y, (-1,1)), columns=list(['w2y']))
 _w2z = pd.DataFrame(np.reshape(_w2z, (-1,1)), columns=list(['w2z']))
-_wwx = pd.DataFrame(np.reshape(_wwx, (-1,1)), columns=list(['wwx']))
-_wwy = pd.DataFrame(np.reshape(_wwy, (-1,1)), columns=list(['wwy']))
+_uwx = pd.DataFrame(np.reshape(_uwx, (-1,1)), columns=list(['uwx']))
+_vwy = pd.DataFrame(np.reshape(_vwy, (-1,1)), columns=list(['vwy']))
 _wwz = pd.DataFrame(np.reshape(_wwz, (-1,1)), columns=list(['wvz']))
 
 #_p = pd.DataFrame(_ux, columns=list('p'))
-_px = pd.DataFrame(np.reshape(_py,(-1,1)), columns=list(['pz']))
+_pz = pd.DataFrame(np.reshape(_pz,(-1,1)), columns=list(['pz']))
 
-derivatives = pd.concat([_wx, _wy, _wz, _w2x, _w2y, _w2z, _wwx, _wwy, _wwz, _pz], axis=1)
-derivatives.to_csv('navier_stokes_data_w.csv',index=False)
+derivatives = pd.concat([_wx, _wy, _wz, _w2x, _w2y, _w2z, _uwx, _vwy, _wwz, _pz], axis=1)
+if(platform.system() == 'Windows'): #Windows
+    derivatives.to_csv('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\navier_stokes_data_w.csv',index=False)
+else: 
+    derivatives.to_csv('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/navier_stokes_data_w.csv',index=False)
 print("W done")
