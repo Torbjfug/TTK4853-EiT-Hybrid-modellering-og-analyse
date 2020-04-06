@@ -264,8 +264,17 @@ Using GEP to predict the PDE ut = -uux + 0.01*u2x
 Our symbolic regression process found the following equation offers our best prediction:
 
 '''
+result = str(symplified_best)
+print(result)
 
-print('\n', key,'\t', str(symplified_best))
+if(platform.system() == 'Windows'): #Windows
+    result_file = open('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\result.txt', "w")
+    result_file.write(result)
+    result_file.close()
+else:
+    result_file = open('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/result.txt', "w")
+    result_file.write(result)
+    result_file.close()
 
 
 # In[70]:#
