@@ -170,8 +170,8 @@ r         = 50          # length of the RNC array
 enable_ls = True # whether to apply the linear scaling technique
 
 # size of population and number of generations
-n_pop   = 2
-n_gen   = 1
+n_pop   = 20
+n_gen   = 200
 champs  = 3
 
 def protected_div(x1, x2):
@@ -267,17 +267,6 @@ Our symbolic regression process found the following equation offers our best pre
 '''
 result = str(symplified_best)
 print(result)
-
-
-h         = 20          # head length t = h(n-1) + 1
-n_genes   = 1        # number of genes in a chromosome
-r         = 50          # length of the RNC array
-enable_ls = True # whether to apply the linear scaling technique
-
-# size of population and number of generations
-n_pop   = 20
-n_gen   = 200
-champs  = 3
 
 if(platform.system() == 'Windows'): #Windows
     f = open('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\result.txt', "a+")
