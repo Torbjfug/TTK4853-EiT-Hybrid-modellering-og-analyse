@@ -17,6 +17,7 @@ import datetime
 import os
 import pandas as pd
 import platform
+import time 
 
 x = True
 y = False
@@ -169,8 +170,8 @@ r         = 50          # length of the RNC array
 enable_ls = True # whether to apply the linear scaling technique
 
 # size of population and number of generations
-n_pop   = 50
-n_gen   = 500
+n_pop   = 2
+n_gen   = 1
 champs  = 3
 
 def protected_div(x1, x2):
@@ -267,16 +268,39 @@ Our symbolic regression process found the following equation offers our best pre
 result = str(symplified_best)
 print(result)
 
+
+h         = 20          # head length t = h(n-1) + 1
+n_genes   = 1        # number of genes in a chromosome
+r         = 50          # length of the RNC array
+enable_ls = True # whether to apply the linear scaling technique
+
+# size of population and number of generations
+n_pop   = 20
+n_gen   = 200
+champs  = 3
+
 if(platform.system() == 'Windows'): #Windows
-    result_file = open('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\result.txt', "w")
-    result_file.write(result)
-    result_file.close()
+    f = open('..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\result.txt', "a+")
+    f.write("\n" + time.strftime("%d/%m/%Y")+" " + time.strftime("%H:%M:%S")+"\n")
+    f.write("Head length: " + str(h) + "\n")
+    f.write("Number of genes: " + str(n_genes) + "\n")
+    f.write("Enable linear scaling: " + str(enable_ls) + "\n")
+    f.write("Population number: " + str(n_pop) + "\n")
+    f.write("Number of generations: " + str(n_gen) + "\n")
+    f.write("Number of champions: " + str(champs) + "\n")
+    f.write("Result: " + result + "\n\n")
+    f.close()
 else:
-    result_file = open('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/result.txt', "w")
-    result_file.write(result)
-    result_file.close()
-
-
+    f = open('/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/result.txt', "a+")
+    f.write("\n" + time.strftime("%d/%m/%Y")+" " + time.strftime("%H:%M:%S")+"\n")
+    f.write("Head length: " + str(h) + "\n")
+    f.write("Number of genes: " + str(n_genes) + "\n")
+    f.write("Enable linear scaling: " + str(enable_ls) + "\n")
+    f.write("Population number: " + str(n_pop) + "\n")
+    f.write("Number of generations: " + str(n_gen) + "\n")
+    f.write("Number of champions: " + str(champs) + "\n")
+    f.write("Result: " + result + "\n\n")
+    f.close()
 # In[70]:#
 #
 #def CalculateBestModelOutput(u,ux,u2x,u3x,u4x,u5x, model):
