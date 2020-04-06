@@ -24,12 +24,12 @@ z = False
 
 if(platform.system() == 'Windows'): #Windows
     #doublecheck the data is there
-    print(os.listdir("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data"))
+    print(os.listdir("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data"))
     # read in the data to pandas
-    navier_data = pd.read_csv("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_eqation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')
+    navier_data = pd.read_csv("..\TTK4853-EiT-Hybrid-modellering-og-analyse\SR\part1_equation_discovery\data\\navier_stokes_data_u.csv",  encoding='utf-8')
 else:
-    print(os.listdir("/lustre1/home/gustavoo/TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data"))
-    navier_data = pd.read_csv("/lustre1/home/gustavoo/TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data/navier_stokes_data_u.csv",  encoding='utf-8')
+    print(os.listdir("/home/gustavoo/TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data"))
+    navier_data = pd.read_csv("/home/gustavoo/TTK4853-EiT-Hybrid-modellering-og-analyse/SR/part1_eqation_discovery/data/navier_stokes_data_u.csv",  encoding='utf-8')
 
 
 # In[46]:
