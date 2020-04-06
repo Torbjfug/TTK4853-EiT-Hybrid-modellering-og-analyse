@@ -37,7 +37,7 @@ class Model(nn.Module):
                  input_dimentions):
 
         super().__init__()
-        self.num_filters = [32, 32, 16]
+        self.num_filters = [32, 32, 8]
         self.encoded = None
         cov_layers = len(self.num_filters)
         input_data_points = image_channels*np.prod(input_dimentions)
@@ -56,20 +56,6 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[0]),
             nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[0],
-            #     out_channels=self.num_filters[0],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[0]),
-            # nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[0],
-            #     out_channels=self.num_filters[0],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[0]),
-            # nn.ReLU(),
         )
 
         self.conv2 = nn.Sequential(
@@ -80,20 +66,6 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[1]),
             nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[1],
-            #     out_channels=self.num_filters[1],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[1]),
-            # nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[1],
-            #     out_channels=self.num_filters[1],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[1]),
-            # nn.ReLU(),
         )
 
         self.conv3 = nn.Sequential(
@@ -104,20 +76,6 @@ class Model(nn.Module):
                 padding=1),
             nn.BatchNorm3d(num_features=self.num_filters[2]),
             nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[2],
-            #     out_channels=self.num_filters[2],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[2]),
-            # nn.ReLU(),
-            # nn.Conv3d(
-            #     in_channels=self.num_filters[2],
-            #     out_channels=self.num_filters[2],
-            #     kernel_size=3,
-            #     padding=1),
-            # nn.BatchNorm3d(num_features=self.num_filters[2]),
-            # nn.ReLU(),
         )
         # Pooling
         self.pool = nn.MaxPool3d(kernel_size=2, stride=2, return_indices=True)
@@ -147,24 +105,6 @@ class Model(nn.Module):
 
         # decoder layers
         self.t_conv1 = nn.Sequential(
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[2],
-            #     out_channels=self.num_filters[2],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[2]),
-            # nn.ReLU(),
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[2],
-            #     out_channels=self.num_filters[2],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[2]),
-            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[2],
                 out_channels=self.num_filters[2],
@@ -177,24 +117,6 @@ class Model(nn.Module):
         )
 
         self.t_conv2 = nn.Sequential(
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[1],
-            #     out_channels=self.num_filters[1],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[1]),
-            # nn.ReLU(),
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[1],
-            #     out_channels=self.num_filters[1],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[1]),
-            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[1],
                 out_channels=self.num_filters[1],
@@ -207,24 +129,6 @@ class Model(nn.Module):
         )
 
         self.t_conv3 = nn.Sequential(
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[0],
-            #     out_channels=self.num_filters[0],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[0]),
-            # nn.ReLU(),
-            # nn.ConvTranspose3d(
-            #     in_channels=self.num_filters[0],
-            #     out_channels=self.num_filters[0],
-            #     kernel_size=3,
-            #     padding=1,
-            #     stride=1,
-            # ),
-            # nn.BatchNorm3d(num_features=self.num_filters[0]),
-            # nn.ReLU(),
             nn.ConvTranspose3d(
                 in_channels=self.num_filters[0],
                 out_channels=image_channels,
@@ -232,30 +136,12 @@ class Model(nn.Module):
                 padding=1,
                 stride=1,
             ),
-            nn.LeakyReLU(),
+            # nn.LeakyReLU(),
         )
 
         self.pool_indecies = [(), (), ()]
         self.activation = nn.ReLU()
         self.dropout = nn.Dropout(0)
-
-        # Linear layers
-        # self.encode_linear = nn.Sequential(
-        #     nn.Linear(
-        #         in_features=self.dense_neurons[0],
-        #         out_features=self.dense_neurons[1]
-        #     ),
-        #     nn.BatchNorm1d(self.dense_neurons[1]),
-        #     nn.ReLU(),
-        # )
-
-        # self.decode_linear = nn.Sequential(
-        #     nn.Linear(
-        #         in_features=self.dense_neurons[1],
-        #         out_features=self.dense_neurons[0]
-        #     ),
-        #     nn.ReLU()
-        # )
 
     def encode(self, x):
         x = self.conv1(x)
@@ -299,8 +185,8 @@ class Model(nn.Module):
 
 
 def error_mean_std(model, dataloader):
-    total_sum = np.zeros(4)
-    total_samples = np.zeros(4)
+    total_sum = torch.zeros(4)
+    total_samples = torch.zeros(4)
     model.eval()
     print("Computing mean")
     for data, norm_params in tqdm(dataloader):
@@ -308,46 +194,46 @@ def error_mean_std(model, dataloader):
         with torch.no_grad():
             output = model(data)
         data = weatherData.reconstruct_data(
-            data, norm_params).detach().cpu().numpy()
+            data, norm_params).detach()
         output = weatherData.reconstruct_data(
-            output, norm_params).detach().cpu().numpy()
+            output, norm_params).detach()
         error = data-output
         n = np.prod(error.shape)//error.shape[1]
-        (b, s, x, y, z) = error.shape
         for i in range(error.shape[1]):
-            total_sum[i] += np.sum(error[:, i, :, :, :])
+            total_sum[i] += torch.sum(error[:, i, :, :, :])
         total_samples += n
 
     means = total_sum/total_samples
     print(means)
-    total_sum = np.zeros(4)
+    total_sum = torch.zeros(4)
     print("Computing std")
     for data, norm_params in tqdm(dataloader):
         data = utils.to_cuda(data)
         with torch.no_grad():
             output = model(data)
         data = weatherData.reconstruct_data(
-            data, norm_params).detach().cpu().numpy()
+            data, norm_params).detach()
         output = weatherData.reconstruct_data(
-            output, norm_params).detach().cpu().numpy()
+            output, norm_params).detach()
         error = data-output
         for i in range(error.shape[1]):
-            total_sum[i] += np.sum(np.square(error[:, i, :, :, :]-means[i]))
+            total_sum[i] += torch.sum(torch.square(error[:,
+                                                         i, :, :, :]-means[i]))
 
     stds = total_sum/(total_samples-1)
-    return means, stds
+    return means.cpu().numpy(), stds.cpu().numpy()
 
 
 if __name__ == "__main__":
-    test_name = "323216"
+    test_name = "192_times_323208"
     x_dim = 32
     y_dim = 32
     z_dim = 32
     batch_size = 32
-    epochs = 0
+    epochs = 4
     learning_rate = 1e-4
     early_stop_count = 4
-    max_steps = 0
+    max_steps = 200000
     dataset = weatherDataSet(x_size=x_dim,
                              y_size=y_dim,
                              z_size=z_dim,
@@ -355,7 +241,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=True,
-                            num_workers=4)
+                            num_workers=16)
     val_dataset = weatherDataSet(x_size=128,
                                  y_size=128,
                                  z_size=32,
@@ -363,7 +249,7 @@ if __name__ == "__main__":
     validation_dataloader = DataLoader(val_dataset,
                                        batch_size=32,
                                        shuffle=True,
-                                       num_workers=0)
+                                       num_workers=10)
     dataloaders = (dataloader, validation_dataloader, validation_dataloader)
     model = Model(4, [z_dim, x_dim, x_dim])
     trainer = trainer.Trainer(
@@ -378,61 +264,64 @@ if __name__ == "__main__":
     )
     summary(model, (4, z_dim, y_dim, x_dim))
     print(torch.cuda.is_available())
-    train = False
+    train = True
     if train:
         trainer.train()
         create_plots(trainer, test_name)
+        trainer.load_best_model()
     else:
         trainer.load_best_model()
         trainer.load_statistic(test_name)
-        #create_plots(trainer, test_name)
-    evaluate_performance(trainer.model, validation_dataloader)
-    # data_sample, norm_params = next(iter(validation_dataloader))
-    # data_sample = utils.to_cuda(data_sample)
-    # # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
-    # trainer.model.eval()
-    # with torch.no_grad():
-    #     reconstructed = trainer.model(data_sample)
+        create_plots(trainer, test_name)
+    my, sigma = error_mean_std(trainer.model, validation_dataloader)
+    print(my)
+    print(sigma)
+    data_sample, norm_params = next(iter(validation_dataloader))
+    data_sample = utils.to_cuda(data_sample)
+    # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
+    trainer.model.eval()
+    with torch.no_grad():
+        reconstructed = trainer.model(data_sample)
 
-    # print(data_sample.shape)
+    print(data_sample.shape)
 
-    # data = data_sample.cpu().detach().numpy()
-    # reconstructed = reconstructed.cpu().detach().numpy()
+    data = data_sample.cpu().detach().numpy()
+    reconstructed = reconstructed.cpu().detach().numpy()
 
-    # plotting.plot_histogram(
-    #     data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='x', bins=100)
-    # plt.savefig('plots/x_hist_norm.png')
-    # plotting.plot_histogram(
-    #     data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='y', bins=100)
-    # plt.savefig('plots/y_hist_norm.png')
-    # plotting.plot_histogram(
-    #     data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
-    # plt.savefig('plots/up_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='x', bins=100)
+    plt.savefig('plots/x_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='y', bins=100)
+    plt.savefig('plots/y_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
+    plt.savefig('plots/up_hist_norm.png')
 
-    # plotting.plot_histogram(
-    #     data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
-    # plt.savefig('plots/preasure_hist_norm.png')
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
+    plt.savefig('plots/preasure_hist_norm.png')
 
-    # data = weatherData.reconstruct_data(data, norm_params)
-    # reconstructed = weatherData.reconstruct_data(reconstructed, norm_params)
+    data = weatherData.reconstruct_data(data, norm_params)
+    reconstructed = weatherData.reconstruct_data(reconstructed, norm_params)
 
-    # plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
-    # plt.savefig('plots/arrows.png')
-    # plotting.plot_histogram(
-    #     data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='x', bins=100)
-    # plt.savefig('plots/x_hist.png')
-    # plotting.plot_histogram(
-    #     data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='y', bins=100)
-    # plt.savefig('plots/y_hist.png')
-    # plotting.plot_histogram(
-    #     data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
-    # plt.savefig('plots/up_hist.png')
+    plotting.plot_arrows3D(data[0, :], reconstructed[0, :], 5)
+    plt.savefig('plots/arrows.png')
+    plotting.plot_histogram(
+        data[:, 2, :, :, :], reconstructed[:, 2, :, :, :], title='x', bins=100)
+    plt.savefig('plots/x_hist.png')
+    plotting.plot_histogram(
+        data[:, 3, :, :, :], reconstructed[:, 3, :, :, :], title='y', bins=100)
+    plt.savefig('plots/y_hist.png')
+    plotting.plot_histogram(
+        data[:, 1, :, :, :], reconstructed[:, 1, :, :, :], title='up', bins=100)
+    plt.savefig('plots/up_hist.png')
 
-    # plotting.plot_histogram(
-    #     data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
-    # plt.savefig('plots/preasure_hist.png')
-    # plotting.plot_contour(data, reconstructed, title='x')
-    # plt.savefig('plots/contour_hist.png')
-    # plt.show(block=False)
+    plotting.plot_histogram(
+        data[:, 0, :, :, :], reconstructed[:, 0, :, :, :], title='preasure_hist', bins=100)
+    plt.savefig('plots/preasure_hist.png')
+    plotting.plot_contour(data, reconstructed, title='x')
+    plt.savefig('plots/contour_hist.png')
+    plt.show(block=False)
 
-    # input("Press key to exit")
+    input("Press key to exit")
