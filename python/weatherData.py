@@ -1,6 +1,6 @@
 from torch.utils.data import Dataset
 import os
-from python.fileHandling import load_hdf5
+from fileHandling import load_hdf5
 import h5py
 import numpy as np
 from torch.utils.data import DataLoader
