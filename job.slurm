@@ -21,10 +21,11 @@ echo "We are using $SLURM_CPUS_ON_NODE cores"
 echo "We are using $SLURM_CPUS_ON_NODE cores per node"
 echo "Total of $SLURM_NTASKS cores"
 
+module purge
 module load intel/2018b 
 module load python/3.6.6
 source datasci/bin/activate
 
-python /home/gustavoo/geppy/setup.py install 
-python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/generate_data_directions.py
-python /home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/gep_eq_disc/navier_stokes.py
+python "/home/gustavoo/geppy/setup.py install" 
+python "/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/data/generate_data_directions.py"
+python "/home/gustavoo/TTK4853-Eit-Hybrid-modellering-og-analyse/SR/part1_equation_discovery/gep_eq_disc/navier_stokes.py"
