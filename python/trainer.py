@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 
 def loss_funk(X_pred, X):
+    return ((X-X_pred)**2).mean()
     return ((1-(X_pred)/(torch.abs(X)+0.01))**2).mean()
 
 
@@ -22,6 +23,7 @@ class Trainer:
                  learning_rate: float,
                  early_stop_count: int,
                  epochs: int,
+                 gradient_steps: int,
                  model: torch.nn.Module,
                  dataloaders: typing.List[torch.utils.data.DataLoader],
                  name: str):
@@ -32,6 +34,7 @@ class Trainer:
         self.learning_rate = learning_rate
         self.early_stop_count = early_stop_count
         self.epochs = epochs
+        self.max_gradient_steps = gradient_steps
 
         #self.loss_criterion = nn.MSELoss()
         self.loss_criterion = loss_funk
@@ -39,7 +42,7 @@ class Trainer:
         self.model = model
         # Transfer model to GPU VRAM, if possible.
         self.model = utils.to_cuda(self.model)
-        # print(self.model)
+        print(self.model)
 
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), learning_rate)
@@ -48,7 +51,7 @@ class Trainer:
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
 
         # Validate our model everytime we pass through 50% of the dataset
-        self.num_steps_per_val = len(self.dataloader_train) // 2
+        self.num_steps_per_val = 200  # len(self.dataloader_train) // 16
         self.global_step = 0
         self.start_time = time.time()
 
@@ -138,6 +141,12 @@ class Trainer:
                     if self.should_early_stop():
                         print("Early stopping.")
                         return
+                if self.global_step >= self.max_gradient_steps:
+                    self.validation_epoch()
+                    self.save_model()
+                    self.save_statistic()
+                    print("Max steps taken")
+                    return
 
     def save_model(self):
         def is_best_model():
@@ -182,6 +191,6 @@ def create_plots(trainer: Trainer, name: str):
     utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
     plt.legend()
 
-    #plt.ylim([0, 0.8])
+    plt.ylim([0, 0.01])
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show(block=False)
