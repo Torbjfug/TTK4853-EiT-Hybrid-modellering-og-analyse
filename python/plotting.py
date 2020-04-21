@@ -3,6 +3,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import fileHandling
+from weatherData import weatherDataSet, load_day, save_batch, reconstruct_data
 
 
 def compute_rmses(original, decompressed):
@@ -86,13 +87,13 @@ def plot_arrows3D(original, compressed, num_arrows):
                           y_range,
                           z_range)
 
-    u = compressed[2, x_range, y_range, z_range]
-    v = compressed[3, x_range, y_range, z_range]
-    w = compressed[1, x_range, y_range, z_range]
+    u = compressed[2, z_range, x_range, y_range]
+    v = compressed[3, z_range, x_range, y_range]
+    w = compressed[1, z_range, x_range, y_range]
 
-    u2 = original[2, x_range, y_range, z_range]
-    v2 = original[3, x_range, y_range, z_range]
-    w2 = original[1, x_range, y_range, z_range]
+    u2 = original[2, z_range, x_range, y_range]
+    v2 = original[3, z_range, x_range, y_range]
+    w2 = original[1, z_range, x_range, y_range]
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -102,3 +103,12 @@ def plot_arrows3D(original, compressed, num_arrows):
 
     ax.quiver(x, y, z, u2, v2, w2, color=('r'), length=0.5,
               normalize=False, label="Original")
+
+
+if __name__ == "__main__":
+    original, norm_params = load_day('data/decomp/2020_01_10_orig.mat')
+    original = reconstruct_data(original, norm_params)
+    decomp, norm_params = load_day('data/decomp/2020_01_10_256.mat')
+    decomp = reconstruct_data(decomp, norm_params)
+    plot_arrows3D(original[0, :], decomp[0, :], 5)
+    plt.show()

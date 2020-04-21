@@ -37,7 +37,7 @@ class Model(nn.Module):
                  input_dimentions):
 
         super().__init__()
-        self.num_filters = [16, 32, 64]
+        self.num_filters = [32, 32, 1]
         self.encoded = None
         cov_layers = len(self.num_filters)
         input_data_points = image_channels*np.prod(input_dimentions)
@@ -223,7 +223,7 @@ def error_mean_std(model, dataloader):
 
 
 if __name__ == "__main__":
-    test_name = "24_times_163264"
+    test_name = "1535_times_323201"
     x_dim = 32
     y_dim = 32
     z_dim = 32
@@ -271,18 +271,20 @@ if __name__ == "__main__":
         trainer.load_best_model()
         # trainer.load_statistic(test_name)
         #create_plots(trainer, test_name)
-    #original, norm_params = load_day('data/train/2018_01_01.mat')
-    #original = to_cuda(original)
-    # trainer.model.eval()
+    original, norm_params = load_day('data/test2/2020_01_10.mat')
+    original = to_cuda(original)
+    trainer.model.eval()
+    decomp = original
     # with torch.no_grad():
-    #decomp = trainer.model(original)
-    #reconstructed = reconstruct_data(decomp, to_cuda(norm_params))
-    #reconstructed = reconstructed.cpu().detach().numpy()
-    #save_batch('data/decomp/2018_01_01.mat', reconstructed)
-    my, sigma = error_mean_std(trainer.model, validation_dataloader)
-    print(my)
-    print(sigma)
-    exit()
+    #     decomp = trainer.model(original)
+    reconstructed = reconstruct_data(decomp, to_cuda(norm_params))
+    reconstructed = reconstructed.cpu().detach().numpy()
+    save_batch('data/decomp/2020_01_10_orig.mat', reconstructed)
+    exit
+    # my, sigma = error_mean_std(trainer.model, validation_dataloader)
+    # print(my)
+    # print(sigma)
+    # exit()
     # data_sample, norm_params = next(iter(validation_dataloader))
     # data_sample = utils.to_cuda(data_sample)
     # # reconstructed = model(data_sample.view((1,) + tuple(data_sample.shape)))
