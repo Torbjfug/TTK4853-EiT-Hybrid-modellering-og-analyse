@@ -23,37 +23,29 @@ def plot_histogram(original, decompressed, title="", bins=20):
     error = original - decompressed
     rmse = compute_rmses(original, decompressed)
     relative_error = compute_relative_error(original, decompressed)
-    plt.figure(figsize=(20, 20))
-    plt.subplot(1, 5, 1)
+    plt.figure(figsize=(10, 10))
+    plt.subplot(1, 4, 1)
     plt.hist(original.flatten(), bins=bins)
     # plt.yticks([])
     #plt.xlim([0.1, 1.1])
     plt.xlabel('Original')
-    plt.subplot(1, 5, 2)
+    plt.subplot(1, 4, 2)
     plt.title(title)
     plt.hist(decompressed.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Decompressed')
     #plt.xlim([0, 1])
 
-    plt.subplot(1, 5, 3)
+    plt.subplot(1, 4, 3)
     plt.hist(error.flatten(), bins=bins)
     # plt.yticks([])
     plt.xlabel('Error')
     #plt.xlim([2, 2])
 
-    plt.subplot(1, 5, 4)
+    plt.subplot(1, 4, 4)
     plt.hist(rmse.flatten(), bins=10)
     # plt.yticks([])
     plt.xlabel('RMSE')
-    #plt.xlim([5, 5])
-    # print("relative_error")
-    # print(relative_error.flatten().shape)
-    plt.subplot(1, 5, 5)
-    plt.hist(relative_error.flatten(), bins=bins)
-    # plt.yticks([])
-    plt.xlabel('Relative error')
-    plt.xlim([0, 1])
 
 
 def plot_contour(original, decompressed, title=""):
@@ -86,9 +78,9 @@ def plot_contour(original, decompressed, title=""):
 
 def plot_arrows3D(original, compressed, num_arrows):
     data_size = original.shape
-    x_range = np.round(np.linspace(0, data_size[1]-1, num_arrows, dtype=int))
-    y_range = np.round(np.linspace(0, data_size[2]-1, num_arrows, dtype=int))
-    z_range = np.round(np.linspace(0, data_size[3]-1, num_arrows, dtype=int))
+    x_range = np.round(np.linspace(0, data_size[2]-1, num_arrows, dtype=int))
+    y_range = np.round(np.linspace(0, data_size[3]-1, num_arrows, dtype=int))
+    z_range = np.round(np.linspace(0, data_size[1]-1, num_arrows, dtype=int))
 
     x, y, z = np.meshgrid(x_range,
                           y_range,
@@ -105,8 +97,8 @@ def plot_arrows3D(original, compressed, num_arrows):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
-    ax.quiver(x, y, z, u, v, w, color=('b'), length=0.8,
+    ax.quiver(x, y, z, u, v, w, color=('b'), length=0.5,
               normalize=False, label="Compressed")
 
-    ax.quiver(x, y, z, u2, v2, w2, color=('r'), length=0.8,
+    ax.quiver(x, y, z, u2, v2, w2, color=('r'), length=0.5,
               normalize=False, label="Original")
